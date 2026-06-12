@@ -12,9 +12,12 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; }
-        .container { max-width: 1200px; margin: auto; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: none; }
-        h2 { text-align: center; color: #333; font-size: 20px; text-transform: uppercase; margin-top: 5px; }
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; height: 100vh; box-sizing: border-box; overflow: hidden; }
+        
+        /* Mở rộng tối đa chiều rộng giao diện theo màn hình */
+        .container { width: 100%; max-width: 100%; box-sizing: border-box; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: none; }
+        
+        h2 { text-align: center; color: #333; font-size: 20px; text-transform: uppercase; margin-top: 5px; margin-bottom: 10px; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         
         /* CSS Bộ đếm & Thao tác */
@@ -55,12 +58,26 @@
         #soNgayCon, #canhBao { background-color: #e9ecef; font-weight: bold; pointer-events: none;}
         .btn-save { background-color: #28a745; color: white; border: none; padding: 12px 24px; cursor: pointer; border-radius: 4px; font-size: 16px; font-weight: bold; width: 100%; }
 
-        /* Bảng dữ liệu */
-        .table-container { overflow-x: auto; }
+        /* Tối ưu cuộn dọc nội bộ cho bảng để giữ cố định bộ lọc phía trên */
+        .table-container { 
+            overflow-x: auto; 
+            overflow-y: auto; 
+            max-height: calc(100vh - 270px); /* Tự động tính toán chiều cao còn lại của màn hình */
+            border: 1px solid #ddd;
+        }
         table { width: 100%; border-collapse: collapse; min-width: 1500px; }
         table, th, td { border: 1px solid #ddd; }
         th, td { padding: 10px; text-align: left; font-size: 13px; }
-        th { background-color: #0056b3; color: white; white-space: nowrap; }
+        
+        /* Cố định phần tiêu đề (thead) khi cuộn bảng */
+        th { 
+            background-color: #0056b3; 
+            color: white; 
+            white-space: nowrap; 
+            position: sticky; 
+            top: 0; 
+            z-index: 5; 
+        }
         
         /* Badges trạng thái */
         .status-badge { padding: 4px 8px; border-radius: 12px; color: white; font-size: 12px; font-weight: bold; white-space: nowrap; }
@@ -80,6 +97,108 @@
         #loginScreen input { margin-bottom: 15px; padding: 10px; font-size: 16px; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;}
         #loginScreen button { background: #007bff; color: white; border: none; padding: 10px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         #loginScreen button:hover { background: #0056b3; }
+/* =========================================================
+   TỐI ƯU HÓA GIAO DIỆN RIÊNG CHO ĐIỆN THOẠI (MOBILE VIEW)
+   ========================================================= */
+@media (max-width: 768px) {
+    /* 1. Tiêu đề gọn lại */
+    h2 { font-size: 16px; margin-bottom: 8px; }
+
+    /* 2. Gom các thẻ đếm thành lưới 3 cột x 2 dòng */
+    .counters-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-bottom: 10px;
+    }
+
+    .counter-card {
+        min-width: auto; /* Bỏ giới hạn độ rộng 150px cũ */
+        padding: 6px 2px;
+    }
+
+    .counter-title {
+        font-size: 9px;
+        letter-spacing: -0.3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .counter-num {
+        font-size: 15px;
+        margin-top: 3px;
+    }
+
+    /* 3. Ép các nút bấm dàn đều ngang nhau, tránh rớt dòng */
+    .action-bar {
+        margin-bottom: 10px;
+        gap: 8px;
+    }
+
+    .btn-group {
+        width: 100%;
+        gap: 6px;
+    }
+
+    .btn-add, .btn-excel {
+        font-size: 11px;
+        padding: 8px 4px;
+        flex: 1; /* Chia đều 50/50 chiều rộng màn hình */
+        text-align: center;
+    }
+
+    /* 4. Căn chỉnh lại bộ lọc trạng thái */
+    .filter-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .filter-group label { font-size: 12px; }
+    
+    .filter-select {
+        width: 65%; /* Mở rộng ô chọn trên mobile */
+        font-size: 12px;
+        padding: 6px;
+    }
+
+    /* 5. Mở rộng tối đa chiều cao phần lưu trữ bảng dữ liệu */
+    .table-container {
+        /* Bù trừ khoảng trống sau khi phần header phía trên đã được thu gọn */
+        max-height: calc(100vh - 210px); 
+    }
+}
+/* =========================================================
+   HIỆU ỨNG HOVER NỔI LÊN (NÚT BẤM & DÒNG DỮ LIỆU)
+   ========================================================= */
+
+/* 1. Thiết lập hiệu ứng chuyển động mượt (transition) cho nút bấm */
+button, .btn-add, .btn-excel {
+    transition: all 0.3s ease; /* Chuyển đổi mượt mà trong 0.3 giây */
+}
+
+/* Hiệu ứng khi di chuột vào nút bấm */
+button:hover, .btn-add:hover, .btn-excel:hover {
+    transform: translateY(-3px); /* Nhấc nút lên trên 3px */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Đổ bóng đậm hơn ở dưới */
+    filter: brightness(1.05); /* Tăng độ sáng của nút lên một chút xíu */
+    cursor: pointer;
+}
+
+/* 2. Thiết lập chuyển động mượt cho các dòng trong bảng */
+tbody tr {
+    transition: all 0.2s ease;
+}
+
+/* Hiệu ứng khi di chuột vào từng dòng dữ liệu (dòng lưu trữ) */
+tbody tr:hover {
+    transform: translateY(-2px); /* Nhấc dòng lên trên 2px */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Đổ bóng xung quanh dòng */
+    background-color: #f8f9fa; /* Đổi màu nền sang xám rất nhạt để tách biệt */
+    position: relative; /* Cần thiết để phần bóng (shadow) đè lên các dòng khác */
+    z-index: 10; /* Đưa dòng đang trỏ chuột lên lớp trên cùng */
+    cursor: pointer; /* Đổi con trỏ chuột thành hình bàn tay */
+}
     </style>
 </head>
 <body>
@@ -217,7 +336,6 @@
 </div>
 
 <script>
-    // Config Firebase cố định của bạn
     const firebaseConfig = {
       apiKey: "AIzaSyCi3UUhmd_D2GvzIPY-pHnPCx4fSVGxI68",
       authDomain: "quanlycongvan-b89b3.firebaseapp.com",
@@ -237,7 +355,6 @@
     let isAdmin = false; 
     let boLocHienTai = "Tất cả"; 
 
-    // --- ĐĂNG NHẬP ---
     function dangNhap() {
         let u = document.getElementById('username').value.trim();
         let p = document.getElementById('password').value.trim();
@@ -275,7 +392,7 @@
             if(role === 'admin') {
                 isAdmin = true;
                 document.getElementById('btnAdd').style.display = "block";
-                document.getElementById('btnExcel').style.display = "block"; // Hiện nút Excel cho Admin
+                document.getElementById('btnExcel').style.display = "block"; 
                 document.getElementById('cotHanhDong').style.display = "table-cell";
             } else {
                 isAdmin = false;
@@ -291,7 +408,6 @@
         }
     });
 
-    // --- REALTIME DATABASE ---
     function taiDuLieuTuFirebase() {
         db.ref('cong_van').on('value', snapshot => {
             danhSachCongVan = [];
@@ -340,7 +456,6 @@
         }
     }
 
-    // --- TÍNH TOÁN HẠN XỬ LÝ TỰ ĐỘNG ---
     function tinhToanThoiHan() {
         let hanStr = document.getElementById('hanXuLy').value;
         if(!hanStr) return;
@@ -356,7 +471,6 @@
         document.getElementById('canhBao').value = txt;
     }
 
-    // --- TÍNH NĂNG IMPORT EXCEL THÔNG MINH ---
     function importExcel(element) {
         if (!isAdmin) { alert("Bạn không có quyền thao tác!"); return; }
         let file = element.files[0];
@@ -370,17 +484,15 @@
                 let firstSheetName = workbook.SheetNames[0];
                 let worksheet = workbook.Sheets[firstSheetName];
                 
-                // Chuyển dữ liệu Excel thành mảng JSON JSON
                 let jsonData = XLSX.utils.sheet_to_json(worksheet);
                 if (jsonData.length === 0) { alert("File Excel trống hoặc lỗi định dạng!"); return; }
 
                 if (confirm(`Tìm thấy ${jsonData.length} hàng dữ liệu. Tiến hành import vào hệ thống?`)) {
                     let successCount = 0;
                     
-                    // Hàm định dạng ngày tháng lấy từ Excel (hỗ trợ cả định dạng Text và định dạng Date của Excel)
                     let parseDate = (val) => {
                         if (!val) return '';
-                        if (typeof val === 'number') { // Excel Serial Date
+                        if (typeof val === 'number') { 
                             let d = new Date((val - 25569) * 86400 * 1000);
                             return d.toISOString().split('T')[0];
                         }
@@ -397,7 +509,6 @@
                     jsonData.forEach(row => {
                         let hanXL = parseDate(row['Hạn xử lý'] || row['hanXuLy']);
                         
-                        // Hệ thống tự động tính toán số ngày còn lại và Cảnh báo thay người dùng
                         let soNgayCon = '';
                         let canhBao = '';
                         if (hanXL) {
@@ -411,7 +522,6 @@
                             else if(soNgayCon <= 3) canhBao = "Sắp hết hạn";
                         }
 
-                        // Map dữ liệu cột của file Excel vào Object lưu trữ Firebase
                         let cv = {
                             ngayDen: parseDate(row['Ngày đến'] || row['ngayDen']),
                             soDen: String(row['Số đến'] || row['soDen'] || ''),
@@ -430,7 +540,6 @@
                             canhBao: canhBao
                         };
 
-                        // Bắt buộc phải có trích yếu mới ghi nhận dữ liệu hợp lệ
                         if (cv.trichYeu) {
                             db.ref('cong_van').push(cv);
                             successCount++;
@@ -442,13 +551,12 @@
             } catch (err) {
                 alert("Lỗi đọc file Excel: " + err.message);
             } finally {
-                element.value = ''; // Reset input
+                element.value = ''; 
             }
         };
         reader.readAsArrayBuffer(file);
     }
 
-    // --- BỘ LỌC VÀ HIỂN THỊ BẢNG ---
     function thayDoiBoLoc(status) {
         boLocHienTai = status;
         document.getElementById('filterTrangThai').value = status;
@@ -530,7 +638,6 @@
         });
     }
 
-    // MODAL WINDOWS CONTROLLER
     function moFormThemMoi() {
         document.getElementById("formTitle").innerText = "NHẬP CÔNG VĂN MỚI";
         document.getElementById("cvId").value = "";
@@ -567,6 +674,7 @@
 
     function dongForm() { document.getElementById("modalForm").style.display = "none"; }
     window.onclick = function(e) { if (e.target == document.getElementById("modalForm")) dongForm(); }
+
 </script>
 
 </body>
