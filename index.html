@@ -717,18 +717,40 @@ function xuLyClick(key) {
     }, 300); // 300ms là độ nhạy cho mobile
 }
 
-    function moFormThemMoi() {
-        document.getElementById("formTitle").innerText = "NHẬP CÔNG VĂN MỚI";
-        document.getElementById("cvId").value = "";
-        document.querySelectorAll('.form-grid input, .form-grid textarea, .form-grid select').forEach(el => {
-            el.value = '';
-            el.disabled = false; // Đảm bảo mọi trường mở ra cho admin
+   function moFormThemMoi() {
+    document.getElementById("formTitle").innerText = "NHẬP CÔNG VĂN MỚI";
+    document.getElementById("cvId").value = "";
+    
+    // Xóa trắng các trường nhập liệu
+    document.querySelectorAll('.form-grid input, .form-grid textarea').forEach(el => el.value = '');
+    
+    // Đặt giá trị mặc định cho dropdown
+    document.getElementById("trangThai").value = "Chưa xử lý";
+    document.getElementById("lapLai").value = "Một lần";
+
+    // --- BẮT ĐẦU: LOGIC TỰ ĐỘNG TĂNG SỐ ĐẾN ---
+    let maxSoDen = 0;
+    
+    // Kiểm tra xem hệ thống đã có dữ liệu chưa
+    if (danhSachCongVan && danhSachCongVan.length > 0) {
+        danhSachCongVan.forEach(cv => {
+            // Hàm parseInt sẽ lấy ra phần số từ chuỗi
+            // Ngay cả khi bạn nhập "1616/CV", nó vẫn nhận diện được số 1616
+            let soHienTai = parseInt(cv.soDen, 10);
+            
+            // So sánh để tìm ra số lớn nhất
+            if (!isNaN(soHienTai) && soHienTai > maxSoDen) {
+                maxSoDen = soHienTai;
+            }
         });
-        document.getElementById("trangThai").value = "Chưa xử lý";
-        document.getElementById("lapLai").value = "Một lần";
-        document.getElementById('phanLichSu').style.display = "none"; // Khóa phần log lịch sử khi tạo mới
-        document.getElementById("modalForm").style.display = "block";
     }
+    
+    // Tự động điền Số đến tiếp theo vào ô input
+    document.getElementById("soDen").value = maxSoDen + 1;
+    // --- KẾT THÚC LOGIC TỰ ĐỘNG TĂNG ---
+
+    document.getElementById("modalForm").style.display = "block";
+}
 function exportExcel() {
     try {
         if (typeof XLSX === 'undefined') {
