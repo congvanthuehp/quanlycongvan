@@ -14,13 +14,12 @@
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; height: 100vh; box-sizing: border-box; overflow: hidden; }
         
-        /* Mở rộng tối đa chiều rộng giao diện theo màn hình */
         .container { width: 100%; max-width: 100%; box-sizing: border-box; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: none; }
         
         h2 { text-align: center; color: #333; font-size: 20px; text-transform: uppercase; margin-top: 5px; margin-bottom: 10px; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         
-        /* CSS Bộ đếm & Thao tác */
+        /* CSS Bộ đếm */
         .counters-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
         .counter-card { flex: 1; min-width: 150px; padding: 12px; background: #fff; border-radius: 6px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.08); border-left: 5px solid #ccc; cursor: pointer; transition: all 0.2s ease; user-select: none; }
         .counter-card:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
@@ -56,28 +55,13 @@
         #soNgayCon, #canhBao { background-color: #e9ecef; font-weight: bold; pointer-events: none;}
         .btn-save { background-color: #28a745; color: white; border: none; padding: 12px 24px; cursor: pointer; border-radius: 4px; font-size: 16px; font-weight: bold; width: 100%; }
 
-        /* Tối ưu cuộn dọc nội bộ cho bảng để giữ cố định bộ lọc phía trên */
-        .table-container { 
-            overflow-x: auto; 
-            overflow-y: auto; 
-            max-height: calc(100vh - 270px); 
-            border: 1px solid #ddd;
-        }
-        table { width: 100%; border-collapse: collapse; min-width: 1500px; }
+        .table-container { overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 270px); border: 1px solid #ddd; }
+        table { width: 100%; border-collapse: collapse; min-width: 1550px; }
         table, th, td { border: 1px solid #ddd; }
         th, td { padding: 10px; text-align: left; font-size: 13px; }
         
-        /* Cố định phần tiêu đề (thead) khi cuộn bảng */
-        th { 
-            background-color: #0056b3; 
-            color: white; 
-            white-space: nowrap; 
-            position: sticky; 
-            top: 0; 
-            z-index: 5; 
-        }
+        th { background-color: #0056b3; color: white; white-space: nowrap; position: sticky; top: 0; z-index: 5; }
         
-        /* Badges trạng thái */
         .status-badge { padding: 4px 8px; border-radius: 12px; color: white; font-size: 12px; font-weight: bold; white-space: nowrap; }
         .bg-warning { background-color: #ffc107; color: black; }
         .bg-info { background-color: #17a2b8; }
@@ -90,15 +74,11 @@
         .text-saphet { color: #ffc107; font-weight: bold; text-shadow: 0 0 1px #000; }
         .text-antoan { color: #28a745; }
 
-        /* Màn hình đăng nhập */
         #loginScreen { max-width: 400px; margin: 100px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); text-align: center; }
         #loginScreen input { margin-bottom: 15px; padding: 10px; font-size: 16px; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;}
         #loginScreen button { background: #007bff; color: white; border: none; padding: 10px; width: 100%; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         #loginScreen button:hover { background: #0056b3; }
 
-        /* =========================================================
-           TỐI ƯU HÓA GIAO DIỆN RIÊNG CHO ĐIỆN THOẠI (MOBILE VIEW)
-           ========================================================= */
         @media (max-width: 768px) {
             h2 { font-size: 16px; margin-bottom: 8px; }
             .counters-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
@@ -114,9 +94,6 @@
             .table-container { max-height: calc(100vh - 210px);  }
         }
 
-        /* =========================================================
-           HIỆU ỨNG HOVER NỔI LÊN (NÚT BẤM & DÒNG DỮ LIỆU)
-           ========================================================= */
         button, .btn-add, .btn-excel { transition: all 0.3s ease; }
         button:hover, .btn-add:hover, .btn-excel:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); filter: brightness(1.05); cursor: pointer; }
         tbody tr { transition: all 0.2s ease; }
@@ -176,7 +153,7 @@
         </div>
         
         <div class="filter-group">
-            <input type="text" id="searchInput" class="filter-select" placeholder="🔍 Tìm nhanh (Số, Trích yếu, BP...)" oninput="hienThiBang()" style="width: 250px;">
+            <input type="text" id="searchInput" class="filter-select" placeholder="🔍 Tìm nhanh (Số, Trích yếu, Trạng thái, Cảnh báo...)" oninput="hienThiBang()" style="width: 280px;">
             
             <label for="filterTrangThai" style="font-size: 14px; margin-left: 10px;">Lọc trạng thái:</label>
             <select id="filterTrangThai" class="filter-select" onchange="thayDoiBoLoc(this.value)">
@@ -196,7 +173,7 @@
             <h3 id="formTitle" style="margin-top: 0; text-align: center;">NHẬP CÔNG VĂN MỚI</h3>
             <input type="hidden" id="cvId"> 
             <div class="form-grid">
-                <div class="form-group"><label>Ngày đến</label><input type="date" id="ngayDen"></div>
+                <div class="form-group"><label>Ngày đến</label><input type="date" id="ngayDen" onchange="tinhTuanBC()"></div>
                 <div class="form-group"><label>Số đến</label><input type="text" id="soDen"></div>
                 <div class="form-group"><label>Cơ quan gửi</label><input type="text" id="coQuanGui"></div>
                 <div class="form-group"><label>Số ký hiệu VB</label><input type="text" id="soKyHieu"></div>
@@ -207,6 +184,7 @@
                 <div class="form-group"><label>Hạn xử lý</label><input type="date" id="hanXuLy" onchange="tinhToanThoiHan()"></div>
                 <div class="form-group"><label>Số ngày còn</label><input type="text" id="soNgayCon" readonly placeholder="Tự động"></div>
                 <div class="form-group"><label>Cảnh báo</label><input type="text" id="canhBao" readonly placeholder="Tự động"></div>
+                <div class="form-group"><label>Tuần BC</label><input type="text" id="tuanBC" placeholder="Tự động theo ngày đến"></div>
                 <div class="form-group"><label>Lặp lại</label>
                     <select id="lapLai">
                         <option value="Một lần">Một lần</option>
@@ -227,7 +205,6 @@
                     </select>
                 </div>
                 <div class="form-group"><label>Ngày hoàn thành</label><input type="date" id="ngayHoanThanh"></div>
-                <div class="form-group"><label>Tuần BC</label><input type="text" id="tuanBC"></div>
             </div>
             
             <button class="btn-save" onclick="luuCongVan()">💾 LƯU DỮ LIỆU</button>
@@ -246,11 +223,12 @@
                     <th>Ngày VB</th>
                     <th>Trích yếu</th>
                     <th>Chủ trì</th>
-                    <th>Phối hợp</th> <th>Hạn XL</th>
+                    <th>Phối hợp</th>
+                    <th>Hạn XL</th>
                     <th>Ngày còn</th>
                     <th>Trạng thái</th>
                     <th>Cảnh báo</th>
-                    <th id="cotHanhDong">Hành động</th> 
+                    <th>Tuần BC</th> <th id="cotHanhDong">Hành động</th> 
                 </tr>
             </thead>
             <tbody id="bangCongVan"></tbody>
@@ -394,6 +372,24 @@
         document.getElementById('canhBao').value = txt;
     }
 
+    // Hàm mới: Tính toán Tuần Báo Cáo từ Ngày đến
+    function tinhTuanBC() {
+        let ngayDenVal = document.getElementById('ngayDen').value;
+        if (ngayDenVal) {
+            let d = new Date(ngayDenVal);
+            let day = d.getDate();
+            let month = d.getMonth() + 1;
+            let year = d.getFullYear();
+            
+            // Chia ngày cho 7, làm tròn lên để lấy số tuần (1-7 = Tuần 1, 8-14 = Tuần 2...)
+            let week = Math.ceil(day / 7);
+            
+            document.getElementById('tuanBC').value = `Tuần ${week} - T${month}/${year}`;
+        } else {
+            document.getElementById('tuanBC').value = '';
+        }
+    }
+
     function importExcel(element) {
         if (!isAdmin) { alert("Bạn không có quyền thao tác!"); return; }
         let file = element.files[0];
@@ -431,6 +427,7 @@
 
                     jsonData.forEach(row => {
                         let hanXL = parseDate(row['Hạn xử lý'] || row['hanXuLy']);
+                        let ngayDenParsed = parseDate(row['Ngày đến'] || row['ngayDen']);
                         
                         let soNgayCon = '';
                         let canhBao = '';
@@ -445,8 +442,21 @@
                             else if(soNgayCon <= 3) canhBao = "Sắp hết hạn";
                         }
 
+                        // Tính tự động Tuần BC nếu trong Excel không có sẵn
+                        let defaultTuanBC = '';
+                        if (ngayDenParsed) {
+                            let d = new Date(ngayDenParsed);
+                            if (!isNaN(d)) {
+                                let day = d.getDate();
+                                let month = d.getMonth() + 1;
+                                let year = d.getFullYear();
+                                let week = Math.ceil(day / 7);
+                                defaultTuanBC = `Tuần ${week} - T${month}/${year}`;
+                            }
+                        }
+
                         let cv = {
-                            ngayDen: parseDate(row['Ngày đến'] || row['ngayDen']),
+                            ngayDen: ngayDenParsed,
                             soDen: String(row['Số đến'] || row['soDen'] || ''),
                             coQuanGui: row['Cơ quan gửi'] || row['coQuanGui'] || '',
                             soKyHieu: row['Số ký hiệu VB'] || row['soKyHieu'] || '',
@@ -459,7 +469,7 @@
                             lapLai: row['Lặp lại'] || row['lapLai'] || 'Một lần',
                             trangThai: row['Trạng thái'] || row['trangThai'] || (soNgayCon < 0 ? 'Quá hạn' : 'Chưa xử lý'),
                             ngayHoanThanh: parseDate(row['Ngày hoàn thành'] || row['ngayHoanThanh']),
-                            tuanBC: row['Tuần BC'] || row['tuanBC'] || '',
+                            tuanBC: row['Tuần BC'] || row['tuanBC'] || defaultTuanBC,
                             canhBao: canhBao
                         };
 
@@ -501,7 +511,6 @@
         let tbody = document.getElementById('bangCongVan');
         tbody.innerHTML = ''; 
 
-        // Đếm số lượng theo trạng thái
         let cAll = 0, cChuaXuLy = 0, cDangXuLy = 0, cHoanThanh = 0, cQuaHan = 0, cChuyenKySau = 0;
         danhSachCongVan.forEach(cv => {
             cAll++;
@@ -519,25 +528,22 @@
         document.getElementById('countQuaHan').innerText = cQuaHan;
         document.getElementById('countChuyenKySau').innerText = cChuyenKySau;
 
-        // Lấy từ khóa tìm kiếm (nếu có)
         let inputTimKiem = document.getElementById('searchInput');
         let tuKhoa = inputTimKiem ? inputTimKiem.value.toLowerCase().trim() : '';
 
-        // Lọc danh sách kết hợp: Theo Trạng Thái VÀ Theo Từ Khóa
+        // Đã cập nhật chuỗi dữ liệu: Gộp thêm trạng thái, cảnh báo và Tuần BC vào để có thể lọc
         let danhSachHienThi = danhSachCongVan.filter(item => {
             let thoaManTrangThai = (boLocHienTai === 'Tất cả') || (item.trangThai === boLocHienTai);
             
             let thoaManTimKiem = true;
             if (tuKhoa !== "") {
-                // Gộp các trường muốn cho phép tìm kiếm vào một chuỗi (Số đến, cơ quan, trích yếu, chủ trì, phối hợp)
-                let chuoiDuLieu = `${item.soDen} ${item.coQuanGui} ${item.trichYeu} ${item.bpChuTri} ${item.bpPhoiHop}`.toLowerCase();
+                let chuoiDuLieu = `${item.soDen} ${item.coQuanGui} ${item.trichYeu} ${item.bpChuTri} ${item.bpPhoiHop} ${item.trangThai} ${item.canhBao} ${item.tuanBC}`.toLowerCase();
                 thoaManTimKiem = chuoiDuLieu.includes(tuKhoa);
             }
 
             return thoaManTrangThai && thoaManTimKiem;
         });
 
-        // Đổ dữ liệu ra bảng
         danhSachHienThi.forEach((cv, i) => {
             let mt = 'bg-info';
             if(cv.trangThai === 'Chưa xử lý') mt = 'bg-warning';
@@ -559,6 +565,7 @@
                 </td>`;
             }
 
+            // Đã bổ sung <td>${cv.tuanBC || ''}</td> phía sau cột cảnh báo
             tbody.innerHTML += `
                 <tr>
                     <td>${i + 1}</td>
@@ -574,6 +581,7 @@
                     <td>${cv.soNgayCon}</td>
                     <td><span class="status-badge ${mt}">${cv.trangThai}</span></td>
                     <td class="${cb}">${cv.canhBao}</td>
+                    <td><strong>${cv.tuanBC || ''}</strong></td>
                     ${cotHanhDongHTML}
                 </tr>
             `;
@@ -606,10 +614,10 @@
             document.getElementById('hanXuLy').value = cv.hanXuLy || '';
             document.getElementById('soNgayCon').value = cv.soNgayCon || '';
             document.getElementById('canhBao').value = cv.canhBao || '';
+            document.getElementById('tuanBC').value = cv.tuanBC || '';
             document.getElementById('lapLai').value = cv.lapLai || 'Một lần';
             document.getElementById('trangThai').value = cv.trangThai || 'Chưa xử lý';
             document.getElementById('ngayHoanThanh').value = cv.ngayHoanThanh || '';
-            document.getElementById('tuanBC').value = cv.tuanBC || '';
             
             document.getElementById("modalForm").style.display = "block";
         }
@@ -619,7 +627,6 @@
         document.getElementById("modalForm").style.display = "none";
     }
 
-    // Đóng modal khi click bên ngoài khung
     window.onclick = function(event) {
         let modal = document.getElementById("modalForm");
         if (event.target === modal) {
