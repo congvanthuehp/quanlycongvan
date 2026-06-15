@@ -168,7 +168,9 @@
 
     <div class="action-bar">
         <button class="btn-add" id="btnAdd" onclick="moFormThemMoi()">➕ THÊM CÔNG VĂN MỚI</button>
+
         <button class="btn-excel" id="btnExcel" onclick="document.getElementById('excelInput').click()">📥 NHẬP TỪ EXCEL</button>
+<button class="btn-export" id="btnExport" onclick="exportExcel()">📤 XUẤT RA EXCEL</button>
         <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="importExcel(this)">
     </div>
 
@@ -455,104 +457,126 @@
     }
 
     function importExcel(element) {
-        if (!isAdmin) { alert("Bạn không có quyền thao tác!"); return; }
-        let file = element.files[0];
-        if (!file) return;
+    if (!isAdmin) { alert("Bạn không có quyền thao tác!"); return; }
+    let file = element.files[0];
+    if (!file) return;
 
-        let reader = new FileReader();
-        reader.onload = function (e) {
-            try {
-                let data = new Uint8Array(e.target.result);
-                let workbook = XLSX.read(data, { type: 'array' });
-                let firstSheetName = workbook.SheetNames[0];
-                let worksheet = workbook.Sheets[firstSheetName];
+    let reader = new FileReader();
+    reader.onload = function (e) {
+        try {
+            let data = new Uint8Array(e.target.result);
+            let workbook = XLSX.read(data, { type: 'array' });
+            let firstSheetName = workbook.SheetNames[0];
+            let worksheet = workbook.Sheets[firstSheetName];
+            
+            let jsonData = XLSX.utils.sheet_to_json(worksheet);
+            if (jsonData.length === 0) { alert("File Excel trống hoặc lỗi định dạng!"); return; }
+
+            if (confirm("Tìm thấy " + jsonData.length + " hàng dữ liệu. Tiến hành import vào hệ thống?")) {
                 
-                let jsonData = XLSX.utils.sheet_to_json(worksheet);
-                if (jsonData.length === 0) { alert("File Excel trống hoặc lỗi định dạng!"); return; }
+                // === BƯỚC 1: TẠO BẢN ĐỒ ĐỐI CHIẾU DỰ LIỆU THEO SỐ ĐẾN (SODEN) ===
+                let currentDataMap = {};
+                danhSachCongVan.forEach(cv => {
+                    if (cv.soDen) {
+                        // Chuẩn hóa Số đến: viết thường, bỏ khoảng trắng thừa ở 2 đầu
+                        let keySoDen = String(cv.soDen).toLowerCase().trim();
+                        currentDataMap[keySoDen] = cv.key; // Lưu lại ID Firebase tương ứng
+                    }
+                });
 
-                if (confirm(`Tìm thấy ${jsonData.length} hàng dữ liệu. Tiến hành import vào hệ thống?`)) {
-                    let successCount = 0;
+                let successAddCount = 0;
+                let successUpdateCount = 0;
+                
+                let parseDate = (val) => {
+                    if (!val) return '';
+                    if (typeof val === 'number') { 
+                        let d = new Date((val - 25569) * 86400 * 1000);
+                        return d.toISOString().split('T')[0];
+                    }
+                    if (typeof val === 'string') {
+                        if (val.includes('/')) {
+                            let parts = val.split('/');
+                            if(parts[2] && parts[2].length === 4) return parts[2] + "-" + parts[1].padStart(2,'0') + "-" + parts[0].padStart(2,'0');
+                        }
+                        return val;
+                    }
+                    return '';
+                };
+
+                jsonData.forEach(row => {
+                    let hanXL = parseDate(row['Hạn xử lý'] || row['hanXuLy']);
+                    let ngayDenParsed = parseDate(row['Ngày đến'] || row['ngayDen']);
                     
-                    let parseDate = (val) => {
-                        if (!val) return '';
-                        if (typeof val === 'number') { 
-                            let d = new Date((val - 25569) * 86400 * 1000);
-                            return d.toISOString().split('T')[0];
+                    let soNgayCon = '';
+                    let canhBao = '';
+                    if (hanXL) {
+                        let homNay = new Date(); homNay.setHours(0,0,0,0);
+                        let targetDate = new Date(hanXL); targetDate.setHours(0,0,0,0);
+                        soNgayCon = Math.ceil((targetDate.getTime() - homNay.getTime()) / (1000 * 3600 * 24));
+                        
+                        canhBao = "Trong hạn";
+                        if(soNgayCon < 0) canhBao = "Quá hạn";
+                        else if(soNgayCon === 0) canhBao = "Hạn cuối cùng";
+                        else if(soNgayCon <= 3) canhBao = "Sắp hết hạn";
+                    }
+
+                    let defaultTuanBC = '';
+                    if (ngayDenParsed) {
+                        let d = new Date(ngayDenParsed);
+                        if (!isNaN(d)) {
+                            let day = d.getDate();
+                            let month = d.getMonth() + 1;
+                            let year = d.getFullYear();
+                            let week = Math.ceil(day / 7);
+                            defaultTuanBC = "Tuần " + week + " - T" + month + "/" + year;
                         }
-                        if (typeof val === 'string') {
-                            if (val.includes('/')) {
-                                let parts = val.split('/');
-                                if(parts[2] && parts[2].length === 4) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
-                            }
-                            return val;
-                        }
-                        return '';
+                    }
+
+                    let cv = {
+                        ngayDen: ngayDenParsed,
+                        soDen: String(row['Số đến'] || row['soDen'] || '').trim(),
+                        coQuanGui: row['Cơ quan gửi'] || row['coQuanGui'] || '',
+                        soKyHieu: row['Số ký hiệu VB'] || row['soKyHieu'] || '',
+                        ngayVB: parseDate(row['Ngày VB'] || row['ngayVB']),
+                        trichYeu: row['Trích yếu nội dung'] || row['trichYeu'] || '',
+                        bpChuTri: row['BP Chủ trì'] || row['bpChuTri'] || '',
+                        bpPhoiHop: row['BP Phối hợp'] || row['bpPhoiHop'] || '',
+                        hanXuLy: hanXL,
+                        soNgayCon: soNgayCon,
+                        lapLai: row['Lặp lại'] || row['lapLai'] || 'Một lần',
+                        trangThai: row['Trạng thái'] || row['trangThai'] || (soNgayCon < 0 ? 'Quá hạn' : 'Chưa xử lý'),
+                        ngayHoanThanh: parseDate(row['Ngày hoàn thành'] || row['ngayHoanThanh']),
+                        tuanBC: row['Tuần BC'] || row['tuanBC'] || defaultTuanBC,
+                        canhBao: canhBao
                     };
 
-                    jsonData.forEach(row => {
-                        let hanXL = parseDate(row['Hạn xử lý'] || row['hanXuLy']);
-                        let ngayDenParsed = parseDate(row['Ngày đến'] || row['ngayDen']);
-                        
-                        let soNgayCon = '';
-                        let canhBao = '';
-                        if (hanXL) {
-                            let homNay = new Date(); homNay.setHours(0,0,0,0);
-                            let targetDate = new Date(hanXL); targetDate.setHours(0,0,0,0);
-                            soNgayCon = Math.ceil((targetDate.getTime() - homNay.getTime()) / (1000 * 3600 * 24));
-                            
-                            canhBao = "Trong hạn";
-                            if(soNgayCon < 0) canhBao = "Quá hạn";
-                            else if(soNgayCon === 0) canhBao = "Hạn cuối cùng";
-                            else if(soNgayCon <= 3) canhBao = "Sắp hết hạn";
-                        }
+                    // Chỉ xử lý nếu dòng Excel đó có Số đến và Trích yếu
+                    if (cv.soDen && cv.trichYeu) {
+                        // === BƯỚC 2: KIỂM TRA TRÙNG THEO SỐ ĐẾN ===
+                        let rowKey = cv.soDen.toLowerCase();
 
-                        let defaultTuanBC = '';
-                        if (ngayDenParsed) {
-                            let d = new Date(ngayDenParsed);
-                            if (!isNaN(d)) {
-                                let day = d.getDate();
-                                let month = d.getMonth() + 1;
-                                let year = d.getFullYear();
-                                let week = Math.ceil(day / 7);
-                                defaultTuanBC = `Tuần ${week} - T${month}/${year}`;
-                            }
-                        }
-
-                        let cv = {
-                            ngayDen: ngayDenParsed,
-                            soDen: String(row['Số đến'] || row['soDen'] || ''),
-                            coQuanGui: row['Cơ quan gửi'] || row['coQuanGui'] || '',
-                            soKyHieu: row['Số ký hiệu VB'] || row['soKyHieu'] || '',
-                            ngayVB: parseDate(row['Ngày VB'] || row['ngayVB']),
-                            trichYeu: row['Trích yếu nội dung'] || row['trichYeu'] || '',
-                            bpChuTri: row['BP Chủ trì'] || row['bpChuTri'] || '',
-                            bpPhoiHop: row['BP Phối hợp'] || row['bpPhoiHop'] || '',
-                            hanXuLy: hanXL,
-                            soNgayCon: soNgayCon,
-                            lapLai: row['Lặp lại'] || row['lapLai'] || 'Một lần',
-                            trangThai: row['Trạng thái'] || row['trangThai'] || (soNgayCon < 0 ? 'Quá hạn' : 'Chưa xử lý'),
-                            ngayHoanThanh: parseDate(row['Ngày hoàn thành'] || row['ngayHoanThanh']),
-                            tuanBC: row['Tuần BC'] || row['tuanBC'] || defaultTuanBC,
-                            canhBao: canhBao
-                        };
-
-                        if (cv.trichYeu) {
+                        if (currentDataMap[rowKey]) {
+                            // Đã tồn tại Số đến này -> Tiến hành cập nhật dữ liệu mới đè lên dữ liệu cũ
+                            db.ref('cong_van/' + currentDataMap[rowKey]).update(cv);
+                            successUpdateCount++;
+                        } else {
+                            // Chưa tồn tại Số đến này -> Thêm mới vào hệ thống
                             db.ref('cong_van').push(cv);
-                            successCount++;
+                            successAddCount++;
                         }
-                    });
+                    }
+                });
 
-                    alert(`Đã nạp thành công ${successCount}/${jsonData.length} công văn vào hệ thống!`);
-                }
-            } catch (err) {
-                alert("Lỗi đọc file Excel: " + err.message);
-            } finally {
-                element.value = ''; 
+                alert("Đã xử lý Excel thành công!\n➕ Thêm mới: " + successAddCount + " công văn\n🔄 Cập nhật trùng (theo Số đến): " + successUpdateCount + " công văn");
             }
-        };
-        reader.readAsArrayBuffer(file);
-    }
-
+        } catch (err) {
+            alert("Lỗi đọc file Excel: " + err.message);
+        } finally {
+            element.value = ''; 
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
     function thayDoiBoLoc(status) {
         boLocHienTai = status;
         document.querySelectorAll('.counter-card').forEach(card => card.classList.remove('active'));
@@ -705,6 +729,63 @@ function xuLyClick(key) {
         document.getElementById('phanLichSu').style.display = "none"; // Khóa phần log lịch sử khi tạo mới
         document.getElementById("modalForm").style.display = "block";
     }
+function exportExcel() {
+    try {
+        if (typeof XLSX === 'undefined') {
+            alert("Hệ thống chưa nhận thư viện Excel! Hãy kiểm tra thẻ script trong head.");
+            return;
+        }
+        if (!danhSachCongVan || danhSachCongVan.length === 0) {
+            alert("Không có dữ liệu để xuất!");
+            return;
+        }
+
+        let filter = (typeof boLocHienTai !== 'undefined') ? boLocHienTai : "Tất cả";
+        let danhSachXuat = filter === 'Tất cả' 
+            ? danhSachCongVan 
+            : danhSachCongVan.filter(item => item.trangThai === filter);
+
+        if (danhSachXuat.length === 0) {
+            alert("Không có công văn nào phù hợp để xuất!");
+            return;
+        }
+
+        let formatFn = (typeof formatDate === 'function') ? formatDate : function(d) { return d || ''; };
+
+        let excelRows = danhSachXuat.map((cv, index) => {
+            return {
+                'STT': index + 1,
+                'Ngày đến': formatFn(cv.ngayDen),
+                'Số đến': cv.soDen || '',
+                'Cơ quan gửi': cv.coQuanGui || '',
+                'Số ký hiệu VB': cv.soKyHieu || '',
+                'Ngày VB': formatFn(cv.ngayVB),
+                'Trích yếu nội dung': cv.trichYeu || '',
+                'BP Chủ trì': cv.bpChuTri || '',
+                'BP Phối hợp': cv.bpPhoiHop || '',
+                'Hạn xử lý': formatFn(cv.hanXuLy),
+                'Số ngày còn': (cv.soNgayCon !== undefined && cv.soNgayCon !== null) ? cv.soNgayCon : '',
+                'Lặp lại': cv.lapLai || 'Một lần',
+                'Trạng thái': cv.trangThai || '',
+                'Ngày hoàn thành': formatFn(cv.ngayHoanThanh),
+                'Tuần BC': cv.tuanBC || '',
+                'Cảnh báo': cv.canhBao || ''
+            };
+        });
+
+        let worksheet = XLSX.utils.json_to_sheet(excelRows);
+        let workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "CongVanNoiBo");
+
+        let formattedDate = new Date().toISOString().split('T')[0];
+        let tenFileClean = filter.replace(/\s+/g, '_');
+        let filename = "Bao_Cao_Cong_Van_" + tenFileClean + "_" + formattedDate + ".xlsx";
+
+        XLSX.writeFile(workbook, filename);
+    } catch (error) {
+        alert("Lỗi xuất Excel: " + error.message);
+    }
+}
 
     function moFormSua(key) {
         let cv = danhSachCongVan.find(item => item.key === key);
@@ -771,6 +852,8 @@ function xuLyClick(key) {
             dongForm();
         }
     }
+
+
 </script>
 </body>
 </html>
