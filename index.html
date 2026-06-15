@@ -212,7 +212,12 @@
                 <div class="form-group"><label>Ngày hoàn thành</label><input type="date" id="ngayHoanThanh"></div>
             </div>
             
-            <button class="btn-save" onclick="luuCongVan()">💾 LƯU DỮ LIỆU</button>
+            <div id="phanLichSu" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ccc; display: none;">
+                <label style="color: #0056b3; font-weight: bold; font-size: 13px;">⏳ LỊCH SỬ CẬP NHẬT (CHỈ ADMIN THẤY):</label>
+                <div id="danhSachLichSu" style="max-height: 120px; overflow-y: auto; font-size: 12px; background: #f8f9fa; padding: 8px; border-radius: 4px; margin-top: 5px; border: 1px solid #ddd;"></div>
+            </div>
+            
+            <button class="btn-save" style="margin-top: 10px;" onclick="luuCongVan()">💾 LƯU DỮ LIỆU</button>
         </div>
     </div>
 
@@ -262,18 +267,33 @@
     let isAdmin = false; 
     let boLocHienTai = "Tất cả"; 
 
+    // Danh sách tài khoản người dùng thông thường
+    const danhSachUserThuong = ["NVDTPC", "KT1", "KT2", "QLDN", "HKD1", "HKD2", "HKD3", "HC", "Thukhac", "truongtcs", "photruongtcs"];
+
     function dangNhap() {
         let u = document.getElementById('username').value.trim();
         let p = document.getElementById('password').value.trim();
         
-        if (u === 'admin' && p === '123') {
-            auth.signInAnonymously() 
-                .then(() => {
-                    localStorage.setItem('cv_user', u);
-                    localStorage.setItem('cv_role', 'admin');
-                    document.getElementById('loginError').style.display = "none";
-                })
-                .catch(err => alert("Lỗi Firebase: " + err.message));
+        if (p === '123') {
+            if (u === 'admin') {
+                auth.signInAnonymously() 
+                    .then(() => {
+                        localStorage.setItem('cv_user', u);
+                        localStorage.setItem('cv_role', 'admin');
+                        document.getElementById('loginError').style.display = "none";
+                    })
+                    .catch(err => alert("Lỗi Firebase: " + err.message));
+            } else if (danhSachUserThuong.includes(u)) {
+                auth.signInAnonymously() 
+                    .then(() => {
+                        localStorage.setItem('cv_user', u);
+                        localStorage.setItem('cv_role', 'user');
+                        document.getElementById('loginError').style.display = "none";
+                    })
+                    .catch(err => alert("Lỗi Firebase: " + err.message));
+            } else {
+                document.getElementById('loginError').style.display = "block";
+            }
         } else {
             document.getElementById('loginError').style.display = "block";
         }
@@ -300,13 +320,14 @@
                 isAdmin = true;
                 document.getElementById('btnAdd').style.display = "block";
                 document.getElementById('btnExcel').style.display = "block"; 
-                document.getElementById('cotHanhDong').style.display = "table-cell";
             } else {
                 isAdmin = false;
                 document.getElementById('btnAdd').style.display = "none";
                 document.getElementById('btnExcel').style.display = "none";
-                document.getElementById('cotHanhDong').style.display = "none";
             }
+            
+            // Cả hai quyền admin và user đều thấy cột hành động để bấm mở form chỉnh sửa/cập nhật
+            document.getElementById('cotHanhDong').style.display = "table-cell";
 
             taiDuLieuTuFirebase();
         } else {
@@ -325,34 +346,75 @@
         });
     }
 
-    function luuCongVan() {
-        if(!isAdmin) { alert("Bạn không có quyền sửa đổi dữ liệu!"); return; }
-
-        let cv = {
-            ngayDen: document.getElementById('ngayDen').value || '',
-            soDen: document.getElementById('soDen').value || '',
-            coQuanGui: document.getElementById('coQuanGui').value || '',
-            soKyHieu: document.getElementById('soKyHieu').value || '',
-            ngayVB: document.getElementById('ngayVB').value || '',
-            trichYeu: document.getElementById('trichYeu').value || '',
-            bpChuTri: document.getElementById('bpChuTri').value || '',
-            bpPhoiHop: document.getElementById('bpPhoiHop').value || '',
-            hanXuLy: document.getElementById('hanXuLy').value || '',
-            soNgayCon: document.getElementById('soNgayCon').value || '',
-            lapLai: document.getElementById('lapLai').value || '',
-            trangThai: document.getElementById('trangThai').value || '',
-            ngayHoanThanh: document.getElementById('ngayHoanThanh').value || '',
-            tuanBC: document.getElementById('tuanBC').value || '',
-            canhBao: document.getElementById('canhBao').value || ''
-        };
-
-        if(!cv.trichYeu) { alert("Vui lòng nhập Trích yếu nội dung!"); return; }
-
+   function luuCongVan() {
         let cvId = document.getElementById('cvId').value;
-        if(cvId) {
-            db.ref('cong_van/' + cvId).update(cv).then(() => dongForm());
+        let usernameHienTai = localStorage.getItem('cv_user') || 'Ẩn danh';
+        let trangThaiMoi = document.getElementById('trangThai').value;
+        let ngayHoanThanhMoi = document.getElementById('ngayHoanThanh').value;
+
+        if (isAdmin) {
+            // QUYỀN ADMIN: Được lưu toàn bộ tất cả các trường
+            let cv = {
+                ngayDen: document.getElementById('ngayDen').value || '',
+                soDen: document.getElementById('soDen').value || '',
+                coQuanGui: document.getElementById('coQuanGui').value || '',
+                soKyHieu: document.getElementById('soKyHieu').value || '',
+                ngayVB: document.getElementById('ngayVB').value || '',
+                trichYeu: document.getElementById('trichYeu').value || '',
+                bpChuTri: document.getElementById('bpChuTri').value || '',
+                bpPhoiHop: document.getElementById('bpPhoiHop').value || '',
+                hanXuLy: document.getElementById('hanXuLy').value || '',
+                soNgayCon: document.getElementById('soNgayCon').value || '',
+                lapLai: document.getElementById('lapLai').value || '',
+                trangThai: trangThaiMoi || '',
+                ngayHoanThanh: ngayHoanThanhMoi || '',
+                tuanBC: document.getElementById('tuanBC').value || '',
+                canhBao: document.getElementById('canhBao').value || ''
+            };
+
+            if(!cv.trichYeu) { alert("Vui lòng nhập Trích yếu nội dung!"); return; }
+
+            if(cvId) {
+                // Giữ lại lịch sử cũ của văn bản nếu đang ở chế độ sửa đổi
+                let cvHienTai = danhSachCongVan.find(item => item.key === cvId);
+                if(cvHienTai && cvHienTai.lichSuSua) {
+                    cv.lichSuSua = cvHienTai.lichSuSua;
+                }
+                db.ref('cong_van/' + cvId).update(cv).then(() => dongForm());
+            } else {
+                db.ref('cong_van').push(cv).then(() => dongForm());
+            }
         } else {
-            db.ref('cong_van').push(cv).then(() => dongForm());
+            // QUYỀN USER THƯỜNG: Chỉ cập nhật trạng thái, ngày hoàn thành và thêm lịch sử sửa đổi
+            if(!cvId) { alert("Bạn không có quyền thêm mới công văn!"); return; }
+
+            let cvHienTai = danhSachCongVan.find(item => item.key === cvId);
+            if(!cvHienTai) return;
+
+            // Xử lý tạo Node Log lịch sử mới
+            let mangLichSu = cvHienTai.lichSuSua || [];
+            let thoiGianHienTai = new Date().toLocaleString('vi-VN');
+            
+            mangLichSu.push({
+                user: usernameHienTai,
+                trangThai: trangThaiMoi,
+                ngayHoanThanh: ngayHoanThanhMoi,
+                thoiGian: thoiGianHienTai
+            });
+
+            let duLieuCapNhatCuaUser = {
+                trangThai: trangThaiMoi,
+                ngayHoanThanh: ngayHoanThanhMoi,
+                lichSuSua: mangLichSu
+            };
+
+            // ĐÃ SỬA LỖI TÊN BIẾN Ở DÒNG DƯỚI ĐÂY
+            db.ref('cong_van/' + cvId).update(duLieuCapNhatCuaUser)
+                .then(() => {
+                    alert("Cập nhật trạng thái công văn thành công!");
+                    dongForm();
+                })
+                .catch(err => alert("Lỗi khi cập nhật dữ liệu: " + err.message));
         }
     }
 
@@ -508,11 +570,10 @@
         thayDoiBoLoc(status); 
     }
 
-   function hienThiBang() {
+    function hienThiBang() {
         let tbody = document.getElementById('bangCongVan');
         tbody.innerHTML = ''; 
 
-        // Lấy giá trị từ các ô lọc
         let locNgay = document.getElementById('filterNgay').value;
         let tuNgay = document.getElementById('tuNgay').value;
         let denNgay = document.getElementById('denNgay').value;
@@ -523,7 +584,6 @@
         let today = new Date();
         let todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
 
-        // BƯỚC 1: Lọc dữ liệu tổng quát (Không tính trạng thái)
         let danhSachDaLoc = danhSachCongVan.filter(item => {
             if (locNgay === 'Hôm nay' && item.ngayDen !== todayStr) return false;
             if (tuNgay !== '' && (!item.ngayDen || item.ngayDen < tuNgay)) return false;
@@ -540,7 +600,6 @@
             return true;
         });
 
-        // BƯỚC 2: Tính toán bộ đếm (Dựa trên danh sách đã lọc các điều kiện trên)
         let cAll = 0, cChuaXuLy = 0, cDangXuLy = 0, cHoanThanh = 0, cQuaHan = 0, cChuyenKySau = 0;
         danhSachDaLoc.forEach(cv => {
             cAll++;
@@ -558,7 +617,6 @@
         document.getElementById('countQuaHan').innerText = cQuaHan;
         document.getElementById('countChuyenKySau').innerText = cChuyenKySau;
 
-        // BƯỚC 3: Lọc chi tiết theo Trạng thái đang chọn (Logic cũ đã được khôi phục)
         let danhSachHienThi = danhSachDaLoc.filter(item => {
             return (boLocHienTai === 'Tất cả') || (item.trangThai === boLocHienTai);
         });
@@ -577,10 +635,17 @@
             
             let cotHanhDongHTML = "";
             if(isAdmin) {
+                // Admin: Thấy đầy đủ Sửa / Xóa
                 cotHanhDongHTML = `
                 <td>
                     <button style="background: #ffc107; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; font-weight:bold;" onclick="moFormSua('${cv.key}')">✏️ Sửa</button>
                     <button style="background: #dc3545; color: white; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; margin-top:4px; font-weight:bold;" onclick="xoaCongVan('${cv.key}')">🗑️ Xóa</button>
+                </td>`;
+            } else {
+                // User thường: Chỉ thấy nút cập nhật trạng thái
+                cotHanhDongHTML = `
+                <td>
+                    <button style="background: #17a2b8; color: white; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; font-weight:bold;" onclick="moFormSua('${cv.key}')">📝 Cập nhật</button>
                 </td>`;
             }
 
@@ -609,17 +674,20 @@
     function moFormThemMoi() {
         document.getElementById("formTitle").innerText = "NHẬP CÔNG VĂN MỚI";
         document.getElementById("cvId").value = "";
-        document.querySelectorAll('.form-grid input, .form-grid textarea').forEach(el => el.value = '');
+        document.querySelectorAll('.form-grid input, .form-grid textarea, .form-grid select').forEach(el => {
+            el.value = '';
+            el.disabled = false; // Đảm bảo mọi trường mở ra cho admin
+        });
         document.getElementById("trangThai").value = "Chưa xử lý";
         document.getElementById("lapLai").value = "Một lần";
+        document.getElementById('phanLichSu').style.display = "none"; // Khóa phần log lịch sử khi tạo mới
         document.getElementById("modalForm").style.display = "block";
     }
 
     function moFormSua(key) {
-        if(!isAdmin) return;
         let cv = danhSachCongVan.find(item => item.key === key);
         if(cv) {
-            document.getElementById("formTitle").innerText = "✏️ CẬP NHẬT CÔNG VĂN";
+            document.getElementById("formTitle").innerText = isAdmin ? "✏️ CẬP NHẬT CÔNG VĂN" : "📝 CẬP NHẬT TRẠNG THÁI";
             document.getElementById("cvId").value = cv.key;
             document.getElementById('ngayDen').value = cv.ngayDen || '';
             document.getElementById('soDen').value = cv.soDen || '';
@@ -636,6 +704,36 @@
             document.getElementById('lapLai').value = cv.lapLai || 'Một lần';
             document.getElementById('trangThai').value = cv.trangThai || 'Chưa xử lý';
             document.getElementById('ngayHoanThanh').value = cv.ngayHoanThanh || '';
+            
+            // XỬ LÝ PHÂN QUYỀN TRƯỜNG NHẬP LIỆU
+            // Khóa/Mở tất cả các trường không liên quan dựa theo quyền Admin
+            const mangIdTruong = ['ngayDen', 'soDen', 'coQuanGui', 'soKyHieu', 'ngayVB', 'trichYeu', 'bpChuTri', 'bpPhoiHop', 'hanXuLy', 'lapLai', 'tuanBC'];
+            mangIdTruong.forEach(id => {
+                document.getElementById(id).disabled = !isAdmin;
+            });
+
+            // XỬ LÝ HIỂN THỊ LỊCH SỬ SỬA ĐỔI (Chỉ Admin mới thấy)
+            let phanLichSu = document.getElementById('phanLichSu');
+            let danhSachLichSu = document.getElementById('danhSachLichSu');
+            
+            if (isAdmin) {
+                phanLichSu.style.display = "block";
+                danhSachLichSu.innerHTML = "";
+                if (cv.lichSuSua && cv.lichSuSua.length > 0) {
+                    cv.lichSuSua.forEach(log => {
+                        danhSachLichSu.innerHTML += `<div style="margin-bottom:6px; border-bottom:1px solid #eee; padding-bottom:4px;">
+                            👤 <strong>User:</strong> <span style="color:#0056b3;">${log.user}</span> | 
+                            📌 <strong>Trạng thái:</strong> [${log.trangThai}] | 
+                            📆 <strong>Ngày HT:</strong> [${log.ngayHoanThanh || 'Trống'}] 
+                            <br><small style="color:#888;">⏱️ Lúc: ${log.thoiGian}</small>
+                        </div>`;
+                    });
+                } else {
+                    danhSachLichSu.innerHTML = "<span style='color:#999; font-style:italic;'>Chưa có lịch sử cập nhật trạng thái từ các User.</span>";
+                }
+            } else {
+                phanLichSu.style.display = "none";
+            }
             
             document.getElementById("modalForm").style.display = "block";
         }
