@@ -570,106 +570,128 @@
         thayDoiBoLoc(status); 
     }
 
-    function hienThiBang() {
-        let tbody = document.getElementById('bangCongVan');
-        tbody.innerHTML = ''; 
+ function hienThiBang() {
+    let tbody = document.getElementById('bangCongVan');
+    tbody.innerHTML = ''; 
 
-        let locNgay = document.getElementById('filterNgay').value;
-        let tuNgay = document.getElementById('tuNgay').value;
-        let denNgay = document.getElementById('denNgay').value;
-        let locTuan = document.getElementById('filterTuan').value.toLowerCase().trim();
-        let locTo = document.getElementById('filterTo').value.toLowerCase().trim();
-        let tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+    let locNgay = document.getElementById('filterNgay').value;
+    let tuNgay = document.getElementById('tuNgay').value;
+    let denNgay = document.getElementById('denNgay').value;
+    let locTuan = document.getElementById('filterTuan').value.toLowerCase().trim();
+    let locTo = document.getElementById('filterTo').value.toLowerCase().trim();
+    let tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
 
-        let today = new Date();
-        let todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    let today = new Date();
+    let todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
 
-        let danhSachDaLoc = danhSachCongVan.filter(item => {
-            if (locNgay === 'Hôm nay' && item.ngayDen !== todayStr) return false;
-            if (tuNgay !== '' && (!item.ngayDen || item.ngayDen < tuNgay)) return false;
-            if (denNgay !== '' && (!item.ngayDen || item.ngayDen > denNgay)) return false;
-            if (locTuan !== '' && !(item.tuanBC || '').toLowerCase().includes(locTuan)) return false;
-            if (locTo !== '') {
-                let chuoiTo = `${item.bpChuTri} ${item.bpPhoiHop}`.toLowerCase();
-                if (!chuoiTo.includes(locTo)) return false;
-            }
-            if (tuKhoa !== '') {
-                let chuoiChung = `${item.soDen} ${item.coQuanGui} ${item.trichYeu} ${item.canhBao}`.toLowerCase();
-                if (!chuoiChung.includes(tuKhoa)) return false;
-            }
-            return true;
-        });
+    let danhSachDaLoc = danhSachCongVan.filter(item => {
+        if (locNgay === 'Hôm nay' && item.ngayDen !== todayStr) return false;
+        if (tuNgay !== '' && (!item.ngayDen || item.ngayDen < tuNgay)) return false;
+        if (denNgay !== '' && (!item.ngayDen || item.ngayDen > denNgay)) return false;
+        if (locTuan !== '' && !(item.tuanBC || '').toLowerCase().includes(locTuan)) return false;
+        if (locTo !== '') {
+            let chuoiTo = `${item.bpChuTri} ${item.bpPhoiHop}`.toLowerCase();
+            if (!chuoiTo.includes(locTo)) return false;
+        }
+        if (tuKhoa !== '') {
+            let chuoiChung = `${item.soDen} ${item.coQuanGui} ${item.trichYeu} ${item.canhBao}`.toLowerCase();
+            if (!chuoiChung.includes(tuKhoa)) return false;
+        }
+        return true;
+    });
 
-        let cAll = 0, cChuaXuLy = 0, cDangXuLy = 0, cHoanThanh = 0, cQuaHan = 0, cChuyenKySau = 0;
-        danhSachDaLoc.forEach(cv => {
-            cAll++;
-            if(cv.trangThai === 'Chưa xử lý') cChuaXuLy++;
-            else if(cv.trangThai === 'Đang xử lý') cDangXuLy++;
-            else if(cv.trangThai === 'Hoàn thành') cHoanThanh++;
-            else if(cv.trangThai === 'Quá hạn') cQuaHan++;
-            else if(cv.trangThai === 'Chuyển kỳ sau') cChuyenKySau++;
-        });
+    let cAll = 0, cChuaXuLy = 0, cDangXuLy = 0, cHoanThanh = 0, cQuaHan = 0, cChuyenKySau = 0;
+    danhSachDaLoc.forEach(cv => {
+        cAll++;
+        if(cv.trangThai === 'Chưa xử lý') cChuaXuLy++;
+        else if(cv.trangThai === 'Đang xử lý') cDangXuLy++;
+        else if(cv.trangThai === 'Hoàn thành') cHoanThanh++;
+        else if(cv.trangThai === 'Quá hạn') cQuaHan++;
+        else if(cv.trangThai === 'Chuyển kỳ sau') cChuyenKySau++;
+    });
 
-        document.getElementById('countAll').innerText = cAll;
-        document.getElementById('countChuaXuLy').innerText = cChuaXuLy;
-        document.getElementById('countDangXuLy').innerText = cDangXuLy;
-        document.getElementById('countHoanThanh').innerText = cHoanThanh;
-        document.getElementById('countQuaHan').innerText = cQuaHan;
-        document.getElementById('countChuyenKySau').innerText = cChuyenKySau;
+    document.getElementById('countAll').innerText = cAll;
+    document.getElementById('countChuaXuLy').innerText = cChuaXuLy;
+    document.getElementById('countDangXuLy').innerText = cDangXuLy;
+    document.getElementById('countHoanThanh').innerText = cHoanThanh;
+    document.getElementById('countQuaHan').innerText = cQuaHan;
+    document.getElementById('countChuyenKySau').innerText = cChuyenKySau;
 
-        let danhSachHienThi = danhSachDaLoc.filter(item => {
-            return (boLocHienTai === 'Tất cả') || (item.trangThai === boLocHienTai);
-        });
+    let danhSachHienThi = danhSachDaLoc.filter(item => {
+        return (boLocHienTai === 'Tất cả') || (item.trangThai === boLocHienTai);
+    });
 
-        danhSachHienThi.forEach((cv, i) => {
-            let mt = 'bg-info';
-            if(cv.trangThai === 'Chưa xử lý') mt = 'bg-warning';
-            if(cv.trangThai === 'Hoàn thành') mt = 'bg-success';
-            if(cv.trangThai === 'Quá hạn') mt = 'bg-danger';
-            if(cv.trangThai === 'Chuyển kỳ sau') mt = 'bg-purple';
+    danhSachHienThi.forEach((cv, i) => {
+        let mt = 'bg-info';
+        if(cv.trangThai === 'Chưa xử lý') mt = 'bg-warning';
+        if(cv.trangThai === 'Hoàn thành') mt = 'bg-success';
+        if(cv.trangThai === 'Quá hạn') mt = 'bg-danger';
+        if(cv.trangThai === 'Chuyển kỳ sau') mt = 'bg-purple';
 
-            let cb = 'text-antoan';
-            if(cv.canhBao === 'Quá hạn') cb = 'text-quahan';
-            if(cv.canhBao === 'Hạn cuối cùng') cb = 'text-hancuoi';
-            if(cv.canhBao === 'Sắp hết hạn') cb = 'text-saphet';
-            
-            let cotHanhDongHTML = "";
-            if(isAdmin) {
-                // Admin: Thấy đầy đủ Sửa / Xóa
-                cotHanhDongHTML = `
-                <td>
-                    <button style="background: #ffc107; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; font-weight:bold;" onclick="moFormSua('${cv.key}')">✏️ Sửa</button>
-                    <button style="background: #dc3545; color: white; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; margin-top:4px; font-weight:bold;" onclick="xoaCongVan('${cv.key}')">🗑️ Xóa</button>
-                </td>`;
+        let cb = 'text-antoan';
+        if(cv.canhBao === 'Quá hạn') cb = 'text-quahan';
+        if(cv.canhBao === 'Hạn cuối cùng') cb = 'text-hancuoi';
+        if(cv.canhBao === 'Sắp hết hạn') cb = 'text-saphet';
+        
+        let cotHanhDongHTML = "";
+        if(isAdmin) {
+            cotHanhDongHTML = `
+            <td>
+                <button style="background: #ffc107; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; font-weight:bold;" onclick="moFormSua('${cv.key}')">✏️ Sửa</button>
+                <button style="background: #dc3545; color: white; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; margin-top:4px; font-weight:bold;" onclick="xoaCongVan('${cv.key}')">🗑️ Xóa</button>
+            </td>`;
+        } else {
+            cotHanhDongHTML = `
+            <td>
+                <button style="background: #17a2b8; color: white; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; font-weight:bold;" onclick="moFormSua('${cv.key}')">📝 Cập nhật</button>
+            </td>`;
+        }
+
+        // Thêm sự kiện onclick vào <tr> để xử lý Double/Triple Tap
+        tbody.innerHTML += `
+            <tr onclick="xuLyClick('${cv.key}')" style="cursor: pointer;">
+                <td>${i + 1}</td>
+                <td>${cv.ngayDen}</td>
+                <td>${cv.soDen}</td>
+                <td>${cv.coQuanGui}</td>
+                <td>${cv.soKyHieu}</td>
+                <td>${cv.ngayVB}</td>
+                <td>${cv.trichYeu}</td>
+                <td>${cv.bpChuTri}</td>
+                <td>${cv.bpPhoiHop}</td> 
+                <td>${cv.hanXuLy}</td>
+                <td>${cv.soNgayCon}</td>
+                <td><span class="status-badge ${mt}">${cv.trangThai}</span></td>
+                <td class="${cb}">${cv.canhBao}</td>
+                <td><strong>${cv.tuanBC || ''}</strong></td>
+                ${cotHanhDongHTML}
+            </tr>
+        `;
+    });
+
+    // Thêm khoảng trống ở dưới cùng
+    tbody.innerHTML += `<tr><td colspan="15" style="height: 300px; border:none; background:transparent;"></td></tr>`;
+}
+let clickCount = 0;
+let clickTimer = null;
+
+function xuLyClick(key) {
+    clickCount++;
+    if (clickTimer) clearTimeout(clickTimer);
+
+    clickTimer = setTimeout(() => {
+        if (clickCount === 2) {
+            moFormSua(key); // Double tap: Sửa
+        } else if (clickCount >= 3) {
+            if (isAdmin) {
+                xoaCongVan(key); // Triple tap: Xóa
             } else {
-                // User thường: Chỉ thấy nút cập nhật trạng thái
-                cotHanhDongHTML = `
-                <td>
-                    <button style="background: #17a2b8; color: white; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; font-weight:bold;" onclick="moFormSua('${cv.key}')">📝 Cập nhật</button>
-                </td>`;
+                alert("Bạn không có quyền xóa!");
             }
-
-            tbody.innerHTML += `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td>${cv.ngayDen}</td>
-                    <td>${cv.soDen}</td>
-                    <td>${cv.coQuanGui}</td>
-                    <td>${cv.soKyHieu}</td>
-                    <td>${cv.ngayVB}</td>
-                    <td>${cv.trichYeu}</td>
-                    <td>${cv.bpChuTri}</td>
-                    <td>${cv.bpPhoiHop}</td> 
-                    <td>${cv.hanXuLy}</td>
-                    <td>${cv.soNgayCon}</td>
-                    <td><span class="status-badge ${mt}">${cv.trangThai}</span></td>
-                    <td class="${cb}">${cv.canhBao}</td>
-                    <td><strong>${cv.tuanBC || ''}</strong></td>
-                    ${cotHanhDongHTML}
-                </tr>
-            `;
-        });
-    }
+        }
+        clickCount = 0;
+    }, 300); // 300ms là độ nhạy cho mobile
+}
 
     function moFormThemMoi() {
         document.getElementById("formTitle").innerText = "NHẬP CÔNG VĂN MỚI";
