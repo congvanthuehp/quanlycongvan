@@ -11,6 +11,22 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
+@media (max-width: 768px) {
+    
+    /* --- Giữ nguyên các đoạn code sửa ô thống kê ở bước trước --- */
+
+
+    /* ẨN HOÀN TOÀN NÚT NHẬP VÀ XUẤT EXCEL TRÊN MOBILE */
+    .btn-excel, .btn-export {
+        display: none !important;
+    }
+
+    /* Tối ưu lại nút Thêm mới khi đứng một mình */
+    .btn-add {
+        width: 100% !important; /* Nút kéo dài full màn hình cho dễ bấm */
+        justify-content: center !important;
+    }
+}
 /* 1. Cấu hình ban đầu cho các ô nhập liệu */
 .form-grid input, .form-grid select, .form-grid textarea {
     transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); /* Chuyển động mượt và tự nhiên hơn */
