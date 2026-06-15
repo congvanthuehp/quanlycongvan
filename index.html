@@ -11,6 +11,67 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
+/* 1. Cấu hình ban đầu cho các ô nhập liệu */
+.form-grid input, .form-grid select, .form-grid textarea {
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); /* Chuyển động mượt và tự nhiên hơn */
+    outline: none;
+    position: relative; /* Bắt buộc phải có để kích hoạt z-index */
+    background-color: #fff;
+}
+
+/* 2. HIỆU ỨNG HOVER: Di chuột vào ô nào, ô đó NỔI HẲN LÊN */
+.form-grid input:not([readonly]):hover, 
+.form-grid select:hover, 
+.form-grid textarea:hover {
+    border-color: #007bff;
+    transform: translateY(-4px) scale(1.01); /* Nhấc ô lên cao 4px và phóng to nhẹ 1% */
+    box-shadow: 0 10px 20px rgba(0, 123, 255, 0.25); /* Đổ bóng sâu phía dưới tạo cảm giác ô đang bay lên */
+    z-index: 99; /* Đảm bảo ô đang chọn luôn nằm trên cùng, không bị các ô khác che mất bóng */
+}
+
+/* 3. HIỆU ỨNG FOCUS: Khi nhấp chuột vào để gõ chữ */
+.form-grid input:not([readonly]):focus, 
+.form-grid select:focus, 
+.form-grid textarea:focus {
+    border-color: #0056b3;
+    transform: translateY(-2px) scale(1.01); /* Giữ độ nổi nhẹ khi đang gõ */
+    box-shadow: 0 6px 12px rgba(0, 86, 179, 0.3);
+    background-color: #f4faff; /* Đổi nền sang xanh nhạt */
+    z-index: 99;
+}
+
+/* 4. Khóa hiệu ứng đối với các ô Chỉ đọc (Readonly) của hệ thống */
+.form-grid input[readonly]:hover, .form-grid input[readonly]:focus {
+    transform: none;
+    box-shadow: none;
+    border-color: #ccc;
+    background-color: #e9ecef;
+}
+/* Hiệu ứng khi di chuột (hover) và nhấp vào (focus) các ô nhập liệu */
+.form-grid input, .form-grid select, .form-grid textarea {
+    transition: all 0.3s ease; /* Làm mượt chuyển động */
+    outline: none; /* Bỏ viền mặc định xấu của trình duyệt */
+}
+
+/* Khi di chuột qua */
+.form-grid input:hover, .form-grid select:hover, .form-grid textarea:hover {
+    border-color: #007bff; /* Đổi viền sang màu xanh */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3); /* Tỏa bóng mờ màu xanh xung quanh */
+}
+
+/* Khi nhấp chuột vào để gõ chữ */
+.form-grid input:focus, .form-grid select:focus, .form-grid textarea:focus {
+    border-color: #0056b3; /* Viền xanh đậm hơn */
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.5); /* Bóng rõ hơn */
+    background-color: #f4faff; /* Đổi nền sang màu xanh cực nhạt cho dễ nhìn */
+}
+
+/* Loại trừ hiệu ứng cho các ô tự động (chỉ đọc) để người dùng không nhầm lẫn */
+.form-grid input[readonly]:hover, .form-grid input[readonly]:focus {
+    border-color: #ccc;
+    box-shadow: none;
+    background-color: #e9ecef;
+}
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; height: 100vh; box-sizing: border-box; overflow: hidden; }
         
         .container { width: 100%; max-width: 100%; box-sizing: border-box; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: none; }
@@ -717,13 +778,23 @@ function xuLyClick(key) {
     }, 300); // 300ms là độ nhạy cho mobile
 }
 
-   function moFormThemMoi() {
+  function moFormThemMoi() {
     document.getElementById("formTitle").innerText = "NHẬP CÔNG VĂN MỚI";
     document.getElementById("cvId").value = "";
     
     // Xóa trắng các trường nhập liệu
     document.querySelectorAll('.form-grid input, .form-grid textarea').forEach(el => el.value = '');
     
+    // --- BẮT ĐẦU: TỰ ĐỘNG ĐIỀN NGÀY HÔM NAY ---
+    let homNay = new Date();
+    // Khắc phục lỗi lệch múi giờ (đảm bảo chuẩn giờ Việt Nam)
+    homNay.setMinutes(homNay.getMinutes() - homNay.getTimezoneOffset()); 
+    let ngayHienTai = homNay.toISOString().split('T')[0]; 
+    
+    // Gán vào ô Ngày đến
+    document.getElementById("ngayDen").value = ngayHienTai;
+    // --- KẾT THÚC LOGIC NGÀY HÔM NAY ---
+
     // Đặt giá trị mặc định cho dropdown
     document.getElementById("trangThai").value = "Chưa xử lý";
     document.getElementById("lapLai").value = "Một lần";
@@ -731,23 +802,16 @@ function xuLyClick(key) {
     // --- BẮT ĐẦU: LOGIC TỰ ĐỘNG TĂNG SỐ ĐẾN ---
     let maxSoDen = 0;
     
-    // Kiểm tra xem hệ thống đã có dữ liệu chưa
     if (danhSachCongVan && danhSachCongVan.length > 0) {
         danhSachCongVan.forEach(cv => {
-            // Hàm parseInt sẽ lấy ra phần số từ chuỗi
-            // Ngay cả khi bạn nhập "1616/CV", nó vẫn nhận diện được số 1616
             let soHienTai = parseInt(cv.soDen, 10);
-            
-            // So sánh để tìm ra số lớn nhất
             if (!isNaN(soHienTai) && soHienTai > maxSoDen) {
                 maxSoDen = soHienTai;
             }
         });
     }
-    
-    // Tự động điền Số đến tiếp theo vào ô input
     document.getElementById("soDen").value = maxSoDen + 1;
-    // --- KẾT THÚC LOGIC TỰ ĐỘNG TĂNG ---
+    // --- KẾT THÚC LOGIC TỰ ĐỘNG TĂNG SỐ ĐẾN ---
 
     document.getElementById("modalForm").style.display = "block";
 }
