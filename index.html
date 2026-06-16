@@ -11,80 +11,74 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
-@media (max-width: 768px) {
-    
-    /* --- Giữ nguyên các đoạn code sửa ô thống kê ở bước trước --- */
+        @media (max-width: 768px) {
+            /* Tối ưu lại nút Thêm mới khi đứng một mình */
+            .btn-add {
+                width: 100% !important; /* Nút kéo dài full màn hình cho dễ bấm */
+                justify-content: center !important;
+            }
+        }
+        /* 1. Cấu hình ban đầu cho các ô nhập liệu */
+        .form-grid input, .form-grid select, .form-grid textarea {
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); /* Chuyển động mượt và tự nhiên hơn */
+            outline: none;
+            position: relative; /* Bắt buộc phải có để kích hoạt z-index */
+            background-color: #fff;
+        }
 
+        /* 2. HIỆU ỨNG HOVER: Di chuột vào ô nào, ô đó NỔI HẲN LÊN */
+        .form-grid input:not([readonly]):hover, 
+        .form-grid select:hover, 
+        .form-grid textarea:hover {
+            border-color: #007bff;
+            transform: translateY(-4px) scale(1.01); /* Nhấc ô lên cao 4px và phóng to nhẹ 1% */
+            box-shadow: 0 10px 20px rgba(0, 123, 255, 0.25); /* Đổ bóng sâu phía dưới tạo cảm giác ô đang bay lên */
+            z-index: 99; /* Đảm bảo ô đang chọn luôn nằm trên cùng, không bị các ô khác che mất bóng */
+        }
 
-   
+        /* 3. HIỆU ỨNG FOCUS: Khi nhấp chuột vào để gõ chữ */
+        .form-grid input:not([readonly]):focus, 
+        .form-grid select:focus, 
+        .form-grid textarea:focus {
+            border-color: #0056b3;
+            transform: translateY(-2px) scale(1.01); /* Giữ độ nổi nhẹ khi đang gõ */
+            box-shadow: 0 6px 12px rgba(0, 86, 179, 0.3);
+            background-color: #f4faff; /* Đổi nền sang xanh nhạt */
+            z-index: 99;
+        }
 
-    /* Tối ưu lại nút Thêm mới khi đứng một mình */
-    .btn-add {
-        width: 100% !important; /* Nút kéo dài full màn hình cho dễ bấm */
-        justify-content: center !important;
-    }
-}
-/* 1. Cấu hình ban đầu cho các ô nhập liệu */
-.form-grid input, .form-grid select, .form-grid textarea {
-    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); /* Chuyển động mượt và tự nhiên hơn */
-    outline: none;
-    position: relative; /* Bắt buộc phải có để kích hoạt z-index */
-    background-color: #fff;
-}
+        /* 4. Khóa hiệu ứng đối với các ô Chỉ đọc (Readonly) của hệ thống */
+        .form-grid input[readonly]:hover, .form-grid input[readonly]:focus {
+            transform: none;
+            box-shadow: none;
+            border-color: #ccc;
+            background-color: #e9ecef;
+        }
+        /* Hiệu ứng khi di chuột (hover) và nhấp vào (focus) các ô nhập liệu */
+        .form-grid input, .form-grid select, .form-grid textarea {
+            transition: all 0.3s ease; /* Làm mượt chuyển động */
+            outline: none; /* Bỏ viền mặc định xấu của trình duyệt */
+        }
 
-/* 2. HIỆU ỨNG HOVER: Di chuột vào ô nào, ô đó NỔI HẲN LÊN */
-.form-grid input:not([readonly]):hover, 
-.form-grid select:hover, 
-.form-grid textarea:hover {
-    border-color: #007bff;
-    transform: translateY(-4px) scale(1.01); /* Nhấc ô lên cao 4px và phóng to nhẹ 1% */
-    box-shadow: 0 10px 20px rgba(0, 123, 255, 0.25); /* Đổ bóng sâu phía dưới tạo cảm giác ô đang bay lên */
-    z-index: 99; /* Đảm bảo ô đang chọn luôn nằm trên cùng, không bị các ô khác che mất bóng */
-}
+        /* Khi di chuột qua */
+        .form-grid input:hover, .form-grid select:hover, .form-grid textarea:hover {
+            border-color: #007bff; /* Đổi viền sang màu xanh */
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3); /* Tỏa bóng mờ màu xanh xung quanh */
+        }
 
-/* 3. HIỆU ỨNG FOCUS: Khi nhấp chuột vào để gõ chữ */
-.form-grid input:not([readonly]):focus, 
-.form-grid select:focus, 
-.form-grid textarea:focus {
-    border-color: #0056b3;
-    transform: translateY(-2px) scale(1.01); /* Giữ độ nổi nhẹ khi đang gõ */
-    box-shadow: 0 6px 12px rgba(0, 86, 179, 0.3);
-    background-color: #f4faff; /* Đổi nền sang xanh nhạt */
-    z-index: 99;
-}
+        /* Khi nhấp chuột vào để gõ chữ */
+        .form-grid input:focus, .form-grid select:focus, .form-grid textarea:focus {
+            border-color: #0056b3; /* Viền xanh đậm hơn */
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.5); /* Bóng rõ hơn */
+            background-color: #f4faff; /* Đổi nền sang màu xanh cực nhạt cho dễ nhìn */
+        }
 
-/* 4. Khóa hiệu ứng đối với các ô Chỉ đọc (Readonly) của hệ thống */
-.form-grid input[readonly]:hover, .form-grid input[readonly]:focus {
-    transform: none;
-    box-shadow: none;
-    border-color: #ccc;
-    background-color: #e9ecef;
-}
-/* Hiệu ứng khi di chuột (hover) và nhấp vào (focus) các ô nhập liệu */
-.form-grid input, .form-grid select, .form-grid textarea {
-    transition: all 0.3s ease; /* Làm mượt chuyển động */
-    outline: none; /* Bỏ viền mặc định xấu của trình duyệt */
-}
-
-/* Khi di chuột qua */
-.form-grid input:hover, .form-grid select:hover, .form-grid textarea:hover {
-    border-color: #007bff; /* Đổi viền sang màu xanh */
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3); /* Tỏa bóng mờ màu xanh xung quanh */
-}
-
-/* Khi nhấp chuột vào để gõ chữ */
-.form-grid input:focus, .form-grid select:focus, .form-grid textarea:focus {
-    border-color: #0056b3; /* Viền xanh đậm hơn */
-    box-shadow: 0 0 8px rgba(0, 123, 255, 0.5); /* Bóng rõ hơn */
-    background-color: #f4faff; /* Đổi nền sang màu xanh cực nhạt cho dễ nhìn */
-}
-
-/* Loại trừ hiệu ứng cho các ô tự động (chỉ đọc) để người dùng không nhầm lẫn */
-.form-grid input[readonly]:hover, .form-grid input[readonly]:focus {
-    border-color: #ccc;
-    box-shadow: none;
-    background-color: #e9ecef;
-}
+        /* Avalon loại trừ hiệu ứng cho các ô tự động (chỉ đọc) để người dùng không nhầm lẫn */
+        .form-grid input[readonly]:hover, .form-grid input[readonly]:focus {
+            border-color: #ccc;
+            box-shadow: none;
+            background-color: #e9ecef;
+        }
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; height: 100vh; box-sizing: border-box; overflow: hidden; }
         
         .container { width: 100%; max-width: 100%; box-sizing: border-box; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: none; }
@@ -107,11 +101,11 @@
         .counter-num { font-size: 22px; font-weight: bold; margin-top: 5px; color: #333; }
 
         /* Lọc nâng cao & Action bar */
-        .advanced-filters { display: flex; gap: 10px; margin-bottom: 10px; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #e9ecef; flex-wrap: wrap; align-items: center; }
+        .advanced-filters { display: flex; gap: 10px; margin-bottom: 10px; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #e9ecef; flex-wrap: wrap; align-items: center; transition: all 0.3s ease; }
         .filter-select { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; font-size: 13px; font-weight: bold; background-color: white; cursor: pointer; outline: none; }
         .filter-select:focus { border-color: #007bff; box-shadow: 0 0 3px rgba(0,123,255,0.3); }
         
-        .date-range-group { display: flex; align-items: center; gap: 5px; background: #fff; padding: 2px 8px; border-radius: 4px; border: 1px solid #ccc; }
+        .date-range-group { display: flex; align-items: center; gap: 5px; background: #fff; padding: 2px 6px; border-radius: 4px; border: 1px solid #ccc; }
         .date-range-group input { border: none; padding: 4px; font-size: 13px; background: transparent; cursor: pointer; outline: none; font-weight: bold; }
         .date-range-group input:focus { border: none; box-shadow: none; }
 
@@ -133,13 +127,45 @@
         #soNgayCon, #canhBao { background-color: #e9ecef; font-weight: bold; pointer-events: none;}
         .btn-save { background-color: #28a745; color: white; border: none; padding: 12px 24px; cursor: pointer; border-radius: 4px; font-size: 16px; font-weight: bold; width: 100%; }
 
-        .table-container { overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 310px); border: 1px solid #ddd; }
-        table { width: 100%; border-collapse: collapse; min-width: 1550px; }
+        /* ========================================= */
+        /* CẬP NHẬT CSS ĐỂ CỐ ĐỊNH TIÊU ĐỀ VÀ CỘT STT */
+        /* ========================================= */
+        .table-container { 
+            overflow: auto; 
+            max-height: calc(100vh - 310px); 
+            border: 1px solid #ddd; 
+            position: relative;
+        }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1550px; }
         table, th, td { border: 1px solid #ddd; }
         th, td { padding: 8px 10px; text-align: left; font-size: 13px; }
         
-        th { background-color: #0056b3; color: white; white-space: nowrap; position: sticky; top: 0; z-index: 5; }
+        /* Cố định dòng tiêu đề chạy dọc */
+        th { 
+            background-color: #0056b3; 
+            color: white; 
+            white-space: nowrap; 
+            position: sticky; 
+            top: 0; 
+            z-index: 20; /* Nằm trên các cột dữ liệu thông thường */
+        }
         
+        /* Cố định cột số thứ tự (STT) chạy ngang */
+        .table-container th:first-child,
+        .table-container td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background-color: #ffffff; /* Nền trắng đặc chặn chữ cuộn phía sau */
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Tạo ranh giới đổ bóng đổ bên phải */
+        }
+        
+        /* Giao điểm của hàng tiêu đề và cột STT (Ô STT trên cùng góc trái) */
+        .table-container thead th:first-child {
+            z-index: 30; /* Độ ưu tiên cao nhất */
+            background-color: #0056b3;
+        }
+
         .status-badge { padding: 4px 8px; border-radius: 12px; color: white; font-size: 12px; font-weight: bold; white-space: nowrap; }
         .bg-warning { background-color: #ffc107; color: black; }
         .bg-info { background-color: #17a2b8; }
@@ -173,7 +199,8 @@
         button, .btn-add, .btn-excel { transition: all 0.3s ease; }
         button:hover, .btn-add:hover, .btn-excel:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); filter: brightness(1.05); cursor: pointer; }
         tbody tr { transition: all 0.2s ease; }
-        tbody tr:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); background-color: #e2e6ea; position: relative; z-index: 10; cursor: pointer; }
+        /* LƯU Ý: Đã lược bỏ thuộc tính transform: translateY để không làm vỡ cơ chế sticky của cột */
+        tbody tr:hover { background-color: #e2e6ea; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -221,7 +248,11 @@
         </div>
     </div>
     
-    <div class="advanced-filters">
+    <button id="btnToggleFilter" onclick="toggleBoLoc()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #007bff; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">
+        🔼 Ẩn Bộ Lọc Thông Minh
+    </button>
+
+    <div class="advanced-filters" id="khuVucBoLoc">
         <span style="font-weight: bold; color: #555;">🔍 Lọc Thông Minh:</span>
         <select id="filterNgay" class="filter-select" onchange="hienThiBang()">
             <option value="Tất cả">📅 Thời gian: Tất cả</option>
@@ -242,9 +273,8 @@
 
     <div class="action-bar">
         <button class="btn-add" id="btnAdd" onclick="moFormThemMoi()">➕ THÊM CÔNG VĂN MỚI</button>
-
         <button class="btn-excel" id="btnExcel" onclick="document.getElementById('excelInput').click()">📥 NHẬP TỪ EXCEL</button>
-<button class="btn-export" id="btnExport" onclick="exportExcel()">📤 XUẤT RA EXCEL</button>
+        <button class="btn-export" id="btnExport" onclick="exportExcel()">📤 XUẤT RA EXCEL</button>
         <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="importExcel(this)">
     </div>
 
@@ -402,9 +432,7 @@
                 document.getElementById('btnExcel').style.display = "none";
             }
             
-            // Cả hai quyền admin và user đều thấy cột hành động để bấm mở form chỉnh sửa/cập nhật
             document.getElementById('cotHanhDong').style.display = "table-cell";
-
             taiDuLieuTuFirebase();
         } else {
             document.getElementById('loginScreen').style.display = "block";
@@ -422,14 +450,13 @@
         });
     }
 
-   function luuCongVan() {
+    function luuCongVan() {
         let cvId = document.getElementById('cvId').value;
         let usernameHienTai = localStorage.getItem('cv_user') || 'Ẩn danh';
         let trangThaiMoi = document.getElementById('trangThai').value;
         let ngayHoanThanhMoi = document.getElementById('ngayHoanThanh').value;
 
         if (isAdmin) {
-            // QUYỀN ADMIN: Được lưu toàn bộ tất cả các trường
             let cv = {
                 ngayDen: document.getElementById('ngayDen').value || '',
                 soDen: document.getElementById('soDen').value || '',
@@ -451,7 +478,6 @@
             if(!cv.trichYeu) { alert("Vui lòng nhập Trích yếu nội dung!"); return; }
 
             if(cvId) {
-                // Giữ lại lịch sử cũ của văn bản nếu đang ở chế độ sửa đổi
                 let cvHienTai = danhSachCongVan.find(item => item.key === cvId);
                 if(cvHienTai && cvHienTai.lichSuSua) {
                     cv.lichSuSua = cvHienTai.lichSuSua;
@@ -461,13 +487,11 @@
                 db.ref('cong_van').push(cv).then(() => dongForm());
             }
         } else {
-            // QUYỀN USER THƯỜNG: Chỉ cập nhật trạng thái, ngày hoàn thành và thêm lịch sử sửa đổi
             if(!cvId) { alert("Bạn không có quyền thêm mới công văn!"); return; }
 
             let cvHienTai = danhSachCongVan.find(item => item.key === cvId);
             if(!cvHienTai) return;
 
-            // Xử lý tạo Node Log lịch sử mới
             let mangLichSu = cvHienTai.lichSuSua || [];
             let thoiGianHienTai = new Date().toLocaleString('vi-VN');
             
@@ -484,7 +508,6 @@
                 lichSuSua: mangLichSu
             };
 
-            // ĐÃ SỬA LỖI TÊN BIẾN Ở DÒNG DƯỚI ĐÂY
             db.ref('cong_van/' + cvId).update(duLieuCapNhatCuaUser)
                 .then(() => {
                     alert("Cập nhật trạng thái công văn thành công!");
@@ -530,127 +553,140 @@
         }
     }
 
+    /* ========================================= */
+    /* HÀM JS: ẨN/HIỆN BỘ LỌC THÔNG MINH (CLICK) */
+    /* ========================================= */
+    function toggleBoLoc() {
+        let khuVuc = document.getElementById("khuVucBoLoc");
+        let btn = document.getElementById("btnToggleFilter");
+        
+        if (khuVuc.style.display === "none") {
+            khuVuc.style.display = "flex"; // Khôi phục lại flex layout ban đầu của lớp css advanced-filters
+            btn.innerHTML = "🔼 Ẩn Bộ Lọc Thông Minh";
+            btn.style.background = "#007bff";
+        } else {
+            khuVuc.style.display = "none";
+            btn.innerHTML = "🔽 Hiện Bộ Lọc Thông Minh";
+            btn.style.background = "#28a745";
+        }
+    }
+
+    /* ========================================================= */
+    /* HOÀN THIỆN HÀM IMPORT EXCEL VÀ CÁC HÀM PHÍA DƯỚI CỦA BẠN */
+    /* ========================================================= */
     function importExcel(element) {
-    if (!isAdmin) { alert("Bạn không có quyền thao tác!"); return; }
-    let file = element.files[0];
-    if (!file) return;
+        if (!isAdmin) { alert("Bạn không có quyền thao tác!"); return; }
+        let file = element.files[0];
+        if (!file) return;
 
-    let reader = new FileReader();
-    reader.onload = function (e) {
-        try {
-            let data = new Uint8Array(e.target.result);
-            let workbook = XLSX.read(data, { type: 'array' });
-            let firstSheetName = workbook.SheetNames[0];
-            let worksheet = workbook.Sheets[firstSheetName];
-            
-            let jsonData = XLSX.utils.sheet_to_json(worksheet);
-            if (jsonData.length === 0) { alert("File Excel trống hoặc lỗi định dạng!"); return; }
-
-            if (confirm("Tìm thấy " + jsonData.length + " hàng dữ liệu. Tiến hành import vào hệ thống?")) {
+        let reader = new FileReader();
+        reader.onload = function (e) {
+            try {
+                let data = new Uint8Array(e.target.result);
+                let workbook = XLSX.read(data, { type: 'array' });
+                let firstSheetName = workbook.SheetNames[0];
+                let worksheet = workbook.Sheets[firstSheetName];
                 
-                // === BƯỚC 1: TẠO BẢN ĐỒ ĐỐI CHIẾU DỰ LIỆU THEO SỐ ĐẾN (SODEN) ===
-                let currentDataMap = {};
-                danhSachCongVan.forEach(cv => {
-                    if (cv.soDen) {
-                        // Chuẩn hóa Số đến: viết thường, bỏ khoảng trắng thừa ở 2 đầu
-                        let keySoDen = String(cv.soDen).toLowerCase().trim();
-                        currentDataMap[keySoDen] = cv.key; // Lưu lại ID Firebase tương ứng
-                    }
-                });
+                let jsonData = XLSX.utils.sheet_to_json(worksheet);
+                if (jsonData.length === 0) { alert("File Excel trống hoặc lỗi định dạng!"); return; }
 
-                let successAddCount = 0;
-                let successUpdateCount = 0;
-                
-                let parseDate = (val) => {
-                    if (!val) return '';
-                    if (typeof val === 'number') { 
-                        let d = new Date((val - 25569) * 86400 * 1000);
-                        return d.toISOString().split('T')[0];
-                    }
-                    if (typeof val === 'string') {
-                        if (val.includes('/')) {
-                            let parts = val.split('/');
-                            if(parts[2] && parts[2].length === 4) return parts[2] + "-" + parts[1].padStart(2,'0') + "-" + parts[0].padStart(2,'0');
+                if (confirm("Tìm thấy " + jsonData.length + " hàng dữ liệu. Tiến hành import vào hệ thống?")) {
+                    let currentDataMap = {};
+                    danhSachCongVan.forEach(cv => {
+                        if (cv.soDen) {
+                            let keySoDen = String(cv.soDen).toLowerCase().trim();
+                            currentDataMap[keySoDen] = cv.key;
                         }
-                        return val;
-                    }
-                    return '';
-                };
+                    });
 
-                jsonData.forEach(row => {
-                    let hanXL = parseDate(row['Hạn xử lý'] || row['hanXuLy']);
-                    let ngayDenParsed = parseDate(row['Ngày đến'] || row['ngayDen']);
+                    let successAddCount = 0;
+                    let successUpdateCount = 0;
                     
-                    let soNgayCon = '';
-                    let canhBao = '';
-                    if (hanXL) {
-                        let homNay = new Date(); homNay.setHours(0,0,0,0);
-                        let targetDate = new Date(hanXL); targetDate.setHours(0,0,0,0);
-                        soNgayCon = Math.ceil((targetDate.getTime() - homNay.getTime()) / (1000 * 3600 * 24));
-                        
-                        canhBao = "Trong hạn";
-                        if(soNgayCon < 0) canhBao = "Quá hạn";
-                        else if(soNgayCon === 0) canhBao = "Hạn cuối cùng";
-                        else if(soNgayCon <= 3) canhBao = "Sắp hết hạn";
-                    }
-
-                    let defaultTuanBC = '';
-                    if (ngayDenParsed) {
-                        let d = new Date(ngayDenParsed);
-                        if (!isNaN(d)) {
-                            let day = d.getDate();
-                            let month = d.getMonth() + 1;
-                            let year = d.getFullYear();
-                            let week = Math.ceil(day / 7);
-                            defaultTuanBC = "Tuần " + week + " - T" + month + "/" + year;
+                    let parseDate = (val) => {
+                        if (!val) return '';
+                        if (typeof val === 'number') { 
+                            let d = new Date((val - 25569) * 86400 * 1000);
+                            return d.toISOString().split('T')[0];
                         }
-                    }
-
-                    let cv = {
-                        ngayDen: ngayDenParsed,
-                        soDen: String(row['Số đến'] || row['soDen'] || '').trim(),
-                        coQuanGui: row['Cơ quan gửi'] || row['coQuanGui'] || '',
-                        soKyHieu: row['Số ký hiệu VB'] || row['soKyHieu'] || '',
-                        ngayVB: parseDate(row['Ngày VB'] || row['ngayVB']),
-                        trichYeu: row['Trích yếu nội dung'] || row['trichYeu'] || '',
-                        bpChuTri: row['BP Chủ trì'] || row['bpChuTri'] || '',
-                        bpPhoiHop: row['BP Phối hợp'] || row['bpPhoiHop'] || '',
-                        hanXuLy: hanXL,
-                        soNgayCon: soNgayCon,
-                        lapLai: row['Lặp lại'] || row['lapLai'] || 'Một lần',
-                        trangThai: row['Trạng thái'] || row['trangThai'] || (soNgayCon < 0 ? 'Quá hạn' : 'Chưa xử lý'),
-                        ngayHoanThanh: parseDate(row['Ngày hoàn thành'] || row['ngayHoanThanh']),
-                        tuanBC: row['Tuần BC'] || row['tuanBC'] || defaultTuanBC,
-                        canhBao: canhBao
+                        if (typeof val === 'string') {
+                            if (val.includes('/')) {
+                                let parts = val.split('/');
+                                if(parts[2] && parts[2].length === 4) return parts[2] + "-" + parts[1].padStart(2,'0') + "-" + parts[0].padStart(2,'0');
+                            }
+                            return val.trim();
+                        }
+                        return '';
                     };
 
-                    // Chỉ xử lý nếu dòng Excel đó có Số đến và Trích yếu
-                    if (cv.soDen && cv.trichYeu) {
-                        // === BƯỚC 2: KIỂM TRA TRÙNG THEO SỐ ĐẾN ===
-                        let rowKey = cv.soDen.toLowerCase();
+                    jsonData.forEach(row => {
+                        let hanXL = parseDate(row['Hạn xử lý'] || row['hanXuLy']);
+                        let ngayDenParsed = parseDate(row['Ngày đến'] || row['ngayDen']);
+                        
+                        let soNgayCon = '';
+                        let canhBao = '';
+                        if (hanXL) {
+                            let homNay = new Date(); homNay.setHours(0,0,0,0);
+                            let targetDate = new Date(hanXL); targetDate.setHours(0,0,0,0);
+                            soNgayCon = Math.ceil((targetDate.getTime() - homNay.getTime()) / (1000 * 3600 * 24));
+                            
+                            canhBao = "Trong hạn";
+                            if(soNgayCon < 0) canhBao = "Quá hạn";
+                            else if(soNgayCon === 0) canhBao = "Hạn cuối cùng";
+                            else if(soNgayCon <= 3) canhBao = "Sắp hết hạn";
+                        }
 
-                        if (currentDataMap[rowKey]) {
-                            // Đã tồn tại Số đến này -> Tiến hành cập nhật dữ liệu mới đè lên dữ liệu cũ
-                            db.ref('cong_van/' + currentDataMap[rowKey]).update(cv);
+                        let defaultTuanBC = '';
+                        if (ngayDenParsed) {
+                            let d = new Date(ngayDenParsed);
+                            if (!isNaN(d)) {
+                                let day = d.getDate();
+                                let month = d.getMonth() + 1;
+                                let year = d.getFullYear();
+                                let week = Math.ceil(day / 7);
+                                defaultTuanBC = "Tuần " + week + " - T" + month + "/" + year;
+                            }
+                        }
+
+                        let cv = {
+                            ngayDen: ngayDenParsed,
+                            soDen: String(row['Số đến'] || row['soDen'] || '').trim(),
+                            coQuanGui: row['Cơ quan gửi'] || row['coQuanGui'] || '',
+                            soKyHieu: row['Số ký hiệu VB'] || row['soKyHieu'] || '',
+                            ngayVB: parseDate(row['Ngày VB'] || row['ngayVB']),
+                            trichYeu: row['Trích yếu nội dung'] || row['trichYeu'] || '',
+                            bpChuTri: row['BP Chủ trì'] || row['bpChuTri'] || '',
+                            bpPhoiHop: row['BP Phối hợp'] || row['bpPhoiHop'] || '',
+                            hanXuLy: hanXL,
+                            soNgayCon: soNgayCon,
+                            canhBao: canhBao,
+                            tuanBC: row['Tuần BC'] || row['tuanBC'] || defaultTuanBC,
+                            lapLai: row['Lặp lại'] || row['lapLai'] || 'Một lần',
+                            trangThai: row['Trạng thái'] || row['trangThai'] || 'Chưa xử lý',
+                            ngayHoanThanh: parseDate(row['Ngày hoàn thành'] || row['ngayHoanThanh'])
+                        };
+
+                        if (!cv.trichYeu) return;
+
+                        let cleanSoDen = String(cv.soDen).toLowerCase().trim();
+                        if (cleanSoDen && currentDataMap[cleanSoDen]) {
+                            let existingKey = currentDataMap[cleanSoDen];
+                            db.ref('cong_van/' + existingKey).update(cv);
                             successUpdateCount++;
                         } else {
-                            // Chưa tồn tại Số đến này -> Thêm mới vào hệ thống
                             db.ref('cong_van').push(cv);
                             successAddCount++;
                         }
-                    }
-                });
-
-                alert("Đã xử lý Excel thành công!\n➕ Thêm mới: " + successAddCount + " công văn\n🔄 Cập nhật trùng (theo Số đến): " + successUpdateCount + " công văn");
+                    });
+                    alert("Import hoàn thành! Thêm mới: " + successAddCount + ", Cập nhật: " + successUpdateCount);
+                }
+            } catch (error) {
+                alert("Lỗi import file: " + error.message);
             }
-        } catch (err) {
-            alert("Lỗi đọc file Excel: " + err.message);
-        } finally {
-            element.value = ''; 
-        }
-    };
-    reader.readAsArrayBuffer(file);
-}
+            element.value = '';
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
     function thayDoiBoLoc(status) {
         boLocHienTai = status;
         document.querySelectorAll('.counter-card').forEach(card => card.classList.remove('active'));
@@ -668,224 +704,211 @@
         thayDoiBoLoc(status); 
     }
 
- function hienThiBang() {
-    let tbody = document.getElementById('bangCongVan');
-    tbody.innerHTML = ''; 
+    function hienThiBang() {
+        let tbody = document.getElementById('bangCongVan');
+        tbody.innerHTML = ''; 
 
-    let locNgay = document.getElementById('filterNgay').value;
-    let tuNgay = document.getElementById('tuNgay').value;
-    let denNgay = document.getElementById('denNgay').value;
-    let locTuan = document.getElementById('filterTuan').value.toLowerCase().trim();
-    let locTo = document.getElementById('filterTo').value.toLowerCase().trim();
-    let tuKhoa = document.getElementById('searchInput').value.toLowerCase().trim();
+        let locNgay = document.getElementById('filterNgay') ? document.getElementById('filterNgay').value : '';
+        let tuNgay = document.getElementById('tuNgay') ? document.getElementById('tuNgay').value : '';
+        let denNgay = document.getElementById('denNgay') ? document.getElementById('denNgay').value : '';
+        let locTuan = document.getElementById('filterTuan') ? document.getElementById('filterTuan').value.toLowerCase().trim() : '';
+        let locTo = document.getElementById('filterTo') ? document.getElementById('filterTo').value.toLowerCase().trim() : '';
+        let tuKhoa = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase().trim() : '';
 
-    let today = new Date();
-    let todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        let today = new Date();
+        let todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
 
-    let danhSachDaLoc = danhSachCongVan.filter(item => {
-        if (locNgay === 'Hôm nay' && item.ngayDen !== todayStr) return false;
-        if (tuNgay !== '' && (!item.ngayDen || item.ngayDen < tuNgay)) return false;
-        if (denNgay !== '' && (!item.ngayDen || item.ngayDen > denNgay)) return false;
-        if (locTuan !== '' && !(item.tuanBC || '').toLowerCase().includes(locTuan)) return false;
-        if (locTo !== '') {
-            let chuoiTo = `${item.bpChuTri} ${item.bpPhoiHop}`.toLowerCase();
-            if (!chuoiTo.includes(locTo)) return false;
-        }
-        if (tuKhoa !== '') {
-            let chuoiChung = `${item.soDen} ${item.coQuanGui} ${item.trichYeu} ${item.canhBao}`.toLowerCase();
-            if (!chuoiChung.includes(tuKhoa)) return false;
-        }
-        return true;
-    });
+        let danhSachDaLoc = danhSachCongVan.filter(item => {
+            if (locNgay === 'Hôm nay' && item.ngayDen !== todayStr) return false;
+            if (tuNgay !== '' && (!item.ngayDen || item.ngayDen < tuNgay)) return false;
+            if (denNgay !== '' && (!item.ngayDen || item.ngayDen > denNgay)) return false;
+            if (locTuan !== '' && !(item.tuanBC || '').toLowerCase().includes(locTuan)) return false;
+            if (locTo !== '') {
+                let chuoiTo = `${item.bpChuTri} ${item.bpPhoiHop}`.toLowerCase();
+                if (!chuoiTo.includes(locTo)) return false;
+            }
+            if (tuKhoa !== '') {
+                let chuoiChung = `${item.soDen} ${item.coQuanGui} ${item.trichYeu} ${item.canhBao}`.toLowerCase();
+                if (!chuoiChung.includes(tuKhoa)) return false;
+            }
+            return true;
+        });
 
-    let cAll = 0, cChuaXuLy = 0, cDangXuLy = 0, cHoanThanh = 0, cQuaHan = 0, cChuyenKySau = 0;
-    danhSachDaLoc.forEach(cv => {
-        cAll++;
-        if(cv.trangThai === 'Chưa xử lý') cChuaXuLy++;
-        else if(cv.trangThai === 'Đang xử lý') cDangXuLy++;
-        else if(cv.trangThai === 'Hoàn thành') cHoanThanh++;
-        else if(cv.trangThai === 'Quá hạn') cQuaHan++;
-        else if(cv.trangThai === 'Chuyển kỳ sau') cChuyenKySau++;
-    });
+        let cAll = 0, cChuaXuLy = 0, cDangXuLy = 0, cHoanThanh = 0, cQuaHan = 0, cChuyenKySau = 0;
+        danhSachDaLoc.forEach(cv => {
+            cAll++;
+            if(cv.trangThai === 'Chưa xử lý') cChuaXuLy++;
+            else if(cv.trangThai === 'Đang xử lý') cDangXuLy++;
+            else if(cv.trangThai === 'Hoàn thành') cHoanThanh++;
+            else if(cv.trangThai === 'Quá hạn') cQuaHan++;
+            else if(cv.trangThai === 'Chuyển kỳ sau') cChuyenKySau++;
+        });
 
-    document.getElementById('countAll').innerText = cAll;
-    document.getElementById('countChuaXuLy').innerText = cChuaXuLy;
-    document.getElementById('countDangXuLy').innerText = cDangXuLy;
-    document.getElementById('countHoanThanh').innerText = cHoanThanh;
-    document.getElementById('countQuaHan').innerText = cQuaHan;
-    document.getElementById('countChuyenKySau').innerText = cChuyenKySau;
+        if(document.getElementById('countAll')) document.getElementById('countAll').innerText = cAll;
+        if(document.getElementById('countChuaXuLy')) document.getElementById('countChuaXuLy').innerText = cChuaXuLy;
+        if(document.getElementById('countDangXuLy')) document.getElementById('countDangXuLy').innerText = cDangXuLy;
+        if(document.getElementById('countHoanThanh')) document.getElementById('countHoanThanh').innerText = cHoanThanh;
+        if(document.getElementById('countQuaHan')) document.getElementById('countQuaHan').innerText = cQuaHan;
+        if(document.getElementById('countChuyenKySau')) document.getElementById('countChuyenKySau').innerText = cChuyenKySau;
 
-    let danhSachHienThi = danhSachDaLoc.filter(item => {
-        return (boLocHienTai === 'Tất cả') || (item.trangThai === boLocHienTai);
-    });
+        let danhSachHienThi = danhSachDaLoc.filter(item => {
+            return (boLocHienTai === 'Tất cả') || (item.trangThai === boLocHienTai);
+        });
 
-    danhSachHienThi.forEach((cv, i) => {
-        let mt = 'bg-info';
-        if(cv.trangThai === 'Chưa xử lý') mt = 'bg-warning';
-        if(cv.trangThai === 'Hoàn thành') mt = 'bg-success';
-        if(cv.trangThai === 'Quá hạn') mt = 'bg-danger';
-        if(cv.trangThai === 'Chuyển kỳ sau') mt = 'bg-purple';
+        danhSachHienThi.forEach((cv, i) => {
+            let mt = 'bg-info';
+            if(cv.trangThai === 'Chưa xử lý') mt = 'bg-warning';
+            if(cv.trangThai === 'Hoàn thành') mt = 'bg-success';
+            if(cv.trangThai === 'Quá hạn') mt = 'bg-danger';
+            if(cv.trangThai === 'Chuyển kỳ sau') mt = 'bg-purple';
 
-        let cb = 'text-antoan';
-        if(cv.canhBao === 'Quá hạn') cb = 'text-quahan';
-        if(cv.canhBao === 'Hạn cuối cùng') cb = 'text-hancuoi';
-        if(cv.canhBao === 'Sắp hết hạn') cb = 'text-saphet';
-        
-        let cotHanhDongHTML = "";
-        if(isAdmin) {
-            cotHanhDongHTML = `
-            <td>
-                <button style="background: #ffc107; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; font-weight:bold;" onclick="moFormSua('${cv.key}')">✏️ Sửa</button>
-                <button style="background: #dc3545; color: white; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; margin-top:4px; font-weight:bold;" onclick="xoaCongVan('${cv.key}')">🗑️ Xóa</button>
-            </td>`;
-        } else {
-            cotHanhDongHTML = `
-            <td>
-                <button style="background: #17a2b8; color: white; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; font-weight:bold;" onclick="moFormSua('${cv.key}')">📝 Cập nhật</button>
-            </td>`;
-        }
-
-        // Thêm sự kiện onclick vào <tr> để xử lý Double/Triple Tap
-        tbody.innerHTML += `
-            <tr onclick="xuLyClick('${cv.key}')" style="cursor: pointer;">
-                <td>${i + 1}</td>
-                <td>${cv.ngayDen}</td>
-                <td>${cv.soDen}</td>
-                <td>${cv.coQuanGui}</td>
-                <td>${cv.soKyHieu}</td>
-                <td>${cv.ngayVB}</td>
-                <td>${cv.trichYeu}</td>
-                <td>${cv.bpChuTri}</td>
-                <td>${cv.bpPhoiHop}</td> 
-                <td>${cv.hanXuLy}</td>
-                <td>${cv.soNgayCon}</td>
-                <td><span class="status-badge ${mt}">${cv.trangThai}</span></td>
-                <td class="${cb}">${cv.canhBao}</td>
-                <td><strong>${cv.tuanBC || ''}</strong></td>
-                ${cotHanhDongHTML}
-            </tr>
-        `;
-    });
-
-    // Thêm khoảng trống ở dưới cùng
-    tbody.innerHTML += `<tr><td colspan="15" style="height: 300px; border:none; background:transparent;"></td></tr>`;
-}
-let clickCount = 0;
-let clickTimer = null;
-
-function xuLyClick(key) {
-    clickCount++;
-    if (clickTimer) clearTimeout(clickTimer);
-
-    clickTimer = setTimeout(() => {
-        if (clickCount === 2) {
-            moFormSua(key); // Double tap: Sửa
-        } else if (clickCount >= 3) {
-            if (isAdmin) {
-                xoaCongVan(key); // Triple tap: Xóa
+            let cb = 'text-antoan';
+            if(cv.canhBao === 'Quá hạn') cb = 'text-quahan';
+            if(cv.canhBao === 'Hạn cuối cùng') cb = 'text-hancuoi';
+            if(cv.canhBao === 'Sắp hết hạn') cb = 'text-saphet';
+            
+            let cotHanhDongHTML = "";
+            if(isAdmin) {
+                cotHanhDongHTML = `
+                <td>
+                    <button style="background: #ffc107; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; font-weight:bold;" onclick="moFormSua('${cv.key}')">✏️ Sửa</button>
+                    <button style="background: #dc3545; color: white; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; margin-top:4px; font-weight:bold;" onclick="xoaCongVan('${cv.key}')">🗑️ Xóa</button>
+                </td>`;
             } else {
-                alert("Bạn không có quyền xóa!");
+                cotHanhDongHTML = `
+                <td>
+                    <button style="background: #17a2b8; color: white; border: none; padding: 6px 10px; cursor: pointer; border-radius: 3px; font-weight:bold;" onclick="moFormSua('${cv.key}')">📝 Cập nhật</button>
+                </td>`;
             }
-        }
-        clickCount = 0;
-    }, 300); // 300ms là độ nhạy cho mobile
-}
 
-  function moFormThemMoi() {
-    document.getElementById("formTitle").innerText = "NHẬP CÔNG VĂN MỚI";
-    document.getElementById("cvId").value = "";
-    
-    // Xóa trắng các trường nhập liệu
-    document.querySelectorAll('.form-grid input, .form-grid textarea').forEach(el => el.value = '');
-    
-    // --- BẮT ĐẦU: TỰ ĐỘNG ĐIỀN NGÀY HÔM NAY ---
-    let homNay = new Date();
-    // Khắc phục lỗi lệch múi giờ (đảm bảo chuẩn giờ Việt Nam)
-    homNay.setMinutes(homNay.getMinutes() - homNay.getTimezoneOffset()); 
-    let ngayHienTai = homNay.toISOString().split('T')[0]; 
-    
-    // Gán vào ô Ngày đến
-    document.getElementById("ngayDen").value = ngayHienTai;
-    // --- KẾT THÚC LOGIC NGÀY HÔM NAY ---
+            tbody.innerHTML += `
+                <tr onclick="xuLyClick('${cv.key}')">
+                    <td>${i + 1}</td>
+                    <td>${cv.ngayDen}</td>
+                    <td>${cv.soDen}</td>
+                    <td>${cv.coQuanGui}</td>
+                    <td>${cv.soKyHieu || ''}</td>
+                    <td>${cv.ngayVB}</td>
+                    <td>${cv.trichYeu}</td>
+                    <td>${cv.bpChuTri}</td>
+                    <td>${cv.bpPhoiHop}</td> 
+                    <td>${cv.hanXuLy}</td>
+                    <td>${cv.soNgayCon}</td>
+                    <td><span class="status-badge ${mt}">${cv.trangThai}</span></td>
+                    <td class="${cb}">${cv.canhBao}</td>
+                    <td><strong>${cv.tuanBC || ''}</strong></td>
+                    ${cotHanhDongHTML}
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML += `<tr><td colspan="15" style="height: 50px; border:none; background:transparent;"></td></tr>`;
+    }
 
-    // Đặt giá trị mặc định cho dropdown
-    document.getElementById("trangThai").value = "Chưa xử lý";
-    document.getElementById("lapLai").value = "Một lần";
+    let clickCount = 0;
+    let clickTimer = null;
 
-    // --- BẮT ĐẦU: LOGIC TỰ ĐỘNG TĂNG SỐ ĐẾN ---
-    let maxSoDen = 0;
-    
-    if (danhSachCongVan && danhSachCongVan.length > 0) {
-        danhSachCongVan.forEach(cv => {
-            let soHienTai = parseInt(cv.soDen, 10);
-            if (!isNaN(soHienTai) && soHienTai > maxSoDen) {
-                maxSoDen = soHienTai;
+    function xuLyClick(key) {
+        clickCount++;
+        if (clickTimer) clearTimeout(clickTimer);
+
+        clickTimer = setTimeout(() => {
+            if (clickCount === 2) {
+                moFormSua(key);
+            } else if (clickCount >= 3) {
+                if (isAdmin) {
+                    xoaCongVan(key);
+                } else {
+                    alert("Bạn không có quyền xóa!");
+                }
             }
-        });
+            clickCount = 0;
+        }, 300);
     }
-    document.getElementById("soDen").value = maxSoDen + 1;
-    // --- KẾT THÚC LOGIC TỰ ĐỘNG TĂNG SỐ ĐẾN ---
 
-    document.getElementById("modalForm").style.display = "block";
-}
+    function moFormThemMoi() {
+        document.getElementById("formTitle").innerText = "NHẬP CÔNG VĂN MỚI";
+        document.getElementById("cvId").value = "";
+        
+        document.querySelectorAll('.form-grid input, .form-grid textarea').forEach(el => el.value = '');
+        
+        let homNay = new Date();
+        homNay.setMinutes(homNay.getMinutes() - homNay.getTimezoneOffset()); 
+        let ngayHienTai = homNay.toISOString().split('T')[0]; 
+        
+        document.getElementById("ngayDen").value = ngayHienTai;
+        document.getElementById("trangThai").value = "Chưa xử lý";
+        document.getElementById("lapLai").value = "Một lần";
 
-function exportExcel() {
-    try {
-        if (typeof XLSX === 'undefined') {
-            alert("Hệ thống chưa nhận thư viện Excel! Hãy kiểm tra thẻ script trong head.");
-            return;
+        let maxSoDen = 0;
+        if (danhSachCongVan && danhSachCongVan.length > 0) {
+            danhSachCongVan.forEach(cv => {
+                let soHienTai = parseInt(cv.soDen, 10);
+                if (!isNaN(soHienTai) && soHienTai > maxSoDen) {
+                    maxSoDen = soHienTai;
+                }
+            });
         }
-        if (!danhSachCongVan || danhSachCongVan.length === 0) {
-            alert("Không có dữ liệu để xuất!");
-            return;
-        }
-
-        let filter = (typeof boLocHienTai !== 'undefined') ? boLocHienTai : "Tất cả";
-        let danhSachXuat = filter === 'Tất cả' 
-            ? danhSachCongVan 
-            : danhSachCongVan.filter(item => item.trangThai === filter);
-
-        if (danhSachXuat.length === 0) {
-            alert("Không có công văn nào phù hợp để xuất!");
-            return;
-        }
-
-        let formatFn = (typeof formatDate === 'function') ? formatDate : function(d) { return d || ''; };
-
-        let excelRows = danhSachXuat.map((cv, index) => {
-            return {
-                'STT': index + 1,
-                'Ngày đến': formatFn(cv.ngayDen),
-                'Số đến': cv.soDen || '',
-                'Cơ quan gửi': cv.coQuanGui || '',
-                'Số ký hiệu VB': cv.soKyHieu || '',
-                'Ngày VB': formatFn(cv.ngayVB),
-                'Trích yếu nội dung': cv.trichYeu || '',
-                'BP Chủ trì': cv.bpChuTri || '',
-                'BP Phối hợp': cv.bpPhoiHop || '',
-                'Hạn xử lý': formatFn(cv.hanXuLy),
-                'Số ngày còn': (cv.soNgayCon !== undefined && cv.soNgayCon !== null) ? cv.soNgayCon : '',
-                'Lặp lại': cv.lapLai || 'Một lần',
-                'Trạng thái': cv.trangThai || '',
-                'Ngày hoàn thành': formatFn(cv.ngayHoanThanh),
-                'Tuần BC': cv.tuanBC || '',
-                'Cảnh báo': cv.canhBao || ''
-            };
-        });
-
-        let worksheet = XLSX.utils.json_to_sheet(excelRows);
-        let workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "CongVanNoiBo");
-
-        let formattedDate = new Date().toISOString().split('T')[0];
-        let tenFileClean = filter.replace(/\s+/g, '_');
-        let filename = "Bao_Cao_Cong_Van_" + tenFileClean + "_" + formattedDate + ".xlsx";
-
-        XLSX.writeFile(workbook, filename);
-    } catch (error) {
-        alert("Lỗi xuất Excel: " + error.message);
+        document.getElementById("soDen").value = maxSoDen + 1;
+        document.getElementById("modalForm").style.display = "block";
+        tinhTuanBC();
     }
-}
+
+    function exportExcel() {
+        try {
+            if (typeof XLSX === 'undefined') {
+                alert("Hệ thống chưa nhận thư viện Excel! Hãy kiểm tra thẻ script trong head.");
+                return;
+            }
+            if (!danhSachCongVan || danhSachCongVan.length === 0) {
+                alert("Không có dữ liệu để xuất!");
+                return;
+            }
+
+            let filter = (typeof boLocHienTai !== 'undefined') ? boLocHienTai : "Tất cả";
+            let danhSachXuat = filter === 'Tất cả' 
+                ? danhSachCongVan 
+                : danhSachCongVan.filter(item => item.trangThai === filter);
+
+            if (danhSachXuat.length === 0) {
+                alert("Không có công văn nào phù hợp để xuất!");
+                return;
+            }
+
+            let excelRows = danhSachXuat.map((cv, index) => {
+                return {
+                    'STT': index + 1,
+                    'Ngày đến': cv.ngayDen || '',
+                    'Số đến': cv.soDen || '',
+                    'Cơ quan gửi': cv.coQuanGui || '',
+                    'Số ký hiệu VB': cv.soKyHieu || '',
+                    'Ngày VB': cv.ngayVB || '',
+                    'Trích yếu nội dung': cv.trichYeu || '',
+                    'BP Chủ trì': cv.bpChuTri || '',
+                    'BP Phối hợp': cv.bpPhoiHop || '',
+                    'Hạn xử lý': cv.hanXuLy || '',
+                    'Số ngày còn': (cv.soNgayCon !== undefined && cv.soNgayCon !== null) ? cv.soNgayCon : '',
+                    'Lặp lại': cv.lapLai || 'Một lần',
+                    'Trạng thái': cv.trangThai || '',
+                    'Ngày hoàn thành': cv.ngayHoanThanh || '',
+                    'Tuần BC': cv.tuanBC || '',
+                    'Cảnh báo': cv.canhBao || ''
+                };
+            });
+
+            let worksheet = XLSX.utils.json_to_sheet(excelRows);
+            let workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "CongVanNoiBo");
+
+            let formattedDate = new Date().toISOString().split('T')[0];
+            let tenFileClean = filter.replace(/\s+/g, '_');
+            let filename = "Bao_Cao_Cong_Van_" + tenFileClean + "_" + formattedDate + ".xlsx";
+
+            XLSX.writeFile(workbook, filename);
+        } catch (error) {
+            alert("Lỗi xuất Excel: " + error.message);
+        }
+    }
 
     function moFormSua(key) {
         let cv = danhSachCongVan.find(item => item.key === key);
@@ -908,34 +931,34 @@ function exportExcel() {
             document.getElementById('trangThai').value = cv.trangThai || 'Chưa xử lý';
             document.getElementById('ngayHoanThanh').value = cv.ngayHoanThanh || '';
             
-            // XỬ LÝ PHÂN QUYỀN TRƯỜNG NHẬP LIỆU
-            // Khóa/Mở tất cả các trường không liên quan dựa theo quyền Admin
             const mangIdTruong = ['ngayDen', 'soDen', 'coQuanGui', 'soKyHieu', 'ngayVB', 'trichYeu', 'bpChuTri', 'bpPhoiHop', 'hanXuLy', 'lapLai', 'tuanBC'];
             mangIdTruong.forEach(id => {
-                document.getElementById(id).disabled = !isAdmin;
+                let el = document.getElementById(id);
+                if(el) el.disabled = !isAdmin;
             });
 
-            // XỬ LÝ HIỂN THỊ LỊCH SỬ SỬA ĐỔI (Chỉ Admin mới thấy)
             let phanLichSu = document.getElementById('phanLichSu');
             let danhSachLichSu = document.getElementById('danhSachLichSu');
             
-            if (isAdmin) {
-                phanLichSu.style.display = "block";
-                danhSachLichSu.innerHTML = "";
-                if (cv.lichSuSua && cv.lichSuSua.length > 0) {
-                    cv.lichSuSua.forEach(log => {
-                        danhSachLichSu.innerHTML += `<div style="margin-bottom:6px; border-bottom:1px solid #eee; padding-bottom:4px;">
-                            👤 <strong>User:</strong> <span style="color:#0056b3;">${log.user}</span> | 
-                            📌 <strong>Trạng thái:</strong> [${log.trangThai}] | 
-                            📆 <strong>Ngày HT:</strong> [${log.ngayHoanThanh || 'Trống'}] 
-                            <br><small style="color:#888;">⏱️ Lúc: ${log.thoiGian}</small>
-                        </div>`;
-                    });
+            if (phanLichSu && danhSachLichSu) {
+                if (isAdmin) {
+                    phanLichSu.style.display = "block";
+                    danhSachLichSu.innerHTML = "";
+                    if (cv.lichSuSua && cv.lichSuSua.length > 0) {
+                        cv.lichSuSua.forEach(log => {
+                            danhSachLichSu.innerHTML += `<div style="margin-bottom:6px; border-bottom:1px solid #eee; padding-bottom:4px;">
+                                👤 <strong>User:</strong> <span style="color:#0056b3;">${log.user}</span> | 
+                                📌 <strong>Trạng thái:</strong> [${log.trangThai}] | 
+                                📆 <strong>Ngày HT:</strong> [${log.ngayHoanThanh || 'Trống'}] 
+                                <br><small style="color:#888;">⏱️ Lúc: ${log.thoiGian}</small>
+                            </div>`;
+                        });
+                    } else {
+                        danhSachLichSu.innerHTML = "<span style='color:#999; font-style:italic;'>Chưa có lịch sử cập nhật trạng thái từ các User.</span>";
+                    }
                 } else {
-                    danhSachLichSu.innerHTML = "<span style='color:#999; font-style:italic;'>Chưa có lịch sử cập nhật trạng thái từ các User.</span>";
+                    phanLichSu.style.display = "none";
                 }
-            } else {
-                phanLichSu.style.display = "none";
             }
             
             document.getElementById("modalForm").style.display = "block";
@@ -943,7 +966,8 @@ function exportExcel() {
     }
 
     function dongForm() {
-        document.getElementById("modalForm").style.display = "none";
+        let modal = document.getElementById("modalForm");
+        if(modal) modal.style.display = "none";
     }
 
     window.onclick = function(event) {
@@ -952,8 +976,6 @@ function exportExcel() {
             dongForm();
         }
     }
-
-
 </script>
 </body>
 </html>
