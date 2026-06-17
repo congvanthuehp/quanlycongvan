@@ -11,6 +11,31 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
+/* Giao diện thanh thông báo nổi (Toast) */
+.toast {
+    visibility: hidden; 
+    min-width: 300px; 
+    background-color: #ff9800; 
+    color: #fff;
+    text-align: center; 
+    border-radius: 8px; 
+    padding: 16px 20px; 
+    position: fixed;
+    z-index: 9999; 
+    left: 50%; 
+    top: 20px; /* Hiển thị ở trên cùng */
+    transform: translateX(-50%);
+    font-size: 16px; 
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.3);
+    font-weight: bold;
+}
+.toast.show { 
+    visibility: visible; 
+    animation: slideIn 0.5s, slideOut 0.5s 14.5s; 
+}
+@keyframes slideIn { from {top: -50px; opacity: 0;} to {top: 20px; opacity: 1;} }
+@keyframes slideOut { from {top: 20px; opacity: 1;} to {top: -50px; opacity: 0;} }
+
         @media (max-width: 768px) {
             /* Tối ưu lại nút Thêm mới khi đứng một mình */
             .btn-add {
@@ -220,6 +245,19 @@
     </div>
     
     <h2>QUẢN LÝ CÔNG VĂN NỘI BỘ</h2>
+<button class="btn-add" id="btnNotify" style="display: none; background-color: #ff9800; margin-left: 10px;" onclick="moFormThongBao()">📢 GỬI THÔNG BÁO</button>
+
+<div id="modalThongBao" class="modal">
+    <div class="modal-content" style="max-width: 450px;">
+        <span class="close-btn" onclick="dongFormThongBao()">&times;</span>
+        <h3 style="margin-top: 0; text-align: center; color: #ff9800;">📢 GỬI THÔNG BÁO HỆ THỐNG</h3>
+        <p style="font-size: 13px; color: #666;">Nội dung này sẽ hiển thị ngay lập tức trên màn hình của tất cả các user đang online.</p>
+        <textarea id="noiDungThongBao" rows="4" style="width: 100%; margin-bottom: 15px; font-size:15px; padding:10px;" placeholder="Nhập nội dung cần thông báo..."></textarea>
+        <button class="btn-save" style="background-color: #ff9800;" onclick="thucHienGuiThongBao()">🚀 PHÁT THÔNG BÁO</button>
+    </div>
+</div>
+
+<div id="toastNotif" class="toast"></div>
 
     <div class="counters-container">
         <div class="counter-card all active" id="card-All" onclick="locTheoCard('Tất cả')">
@@ -274,8 +312,10 @@
     <div class="action-bar">
         <button class="btn-add" id="btnAdd" onclick="moFormThemMoi()">➕ THÊM CÔNG VĂN MỚI</button>
         <button class="btn-excel" id="btnExcel" onclick="document.getElementById('excelInput').click()">📥 NHẬP TỪ EXCEL</button>
+
         <button class="btn-export" id="btnExport" onclick="exportExcel()">📤 XUẤT RA EXCEL</button>
         <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="importExcel(this)">
+
     </div>
 
     <div id="modalForm" class="modal">
@@ -424,14 +464,25 @@
             document.getElementById('mainApp').style.display = "block";
             document.getElementById('userInfo').innerText = "Xin chào: " + username;
 
+            // Xử lý Phân quyền hiển thị giao diện
             if(role === 'admin') {
                 isAdmin = true;
                 document.getElementById('btnAdd').style.display = "block";
                 document.getElementById('btnExcel').style.display = "block"; 
+                
+                // ---> Bật nút Gửi Thông Báo cho Admin <---
+                if(document.getElementById('btnNotify')) {
+                    document.getElementById('btnNotify').style.display = "inline-block";
+                }
             } else {
                 isAdmin = false;
                 document.getElementById('btnAdd').style.display = "none";
                 document.getElementById('btnExcel').style.display = "none";
+                
+                // ---> Ẩn nút Gửi Thông Báo với User phòng ban khác <---
+                if(document.getElementById('btnNotify')) {
+                    document.getElementById('btnNotify').style.display = "none";
+                }
             }
             
             document.getElementById('cotHanhDong').style.display = "table-cell";
@@ -1011,6 +1062,89 @@
             dongForm();
         }
     }
+
+
+// ==========================================
+// TÍNH NĂNG GỬI THÔNG BÁO THỜI GIAN THỰC
+// ==========================================
+
+// 1. Các hàm Mở/Đóng form
+function moFormThongBao() {
+    document.getElementById('noiDungThongBao').value = '';
+    document.getElementById('modalThongBao').style.display = 'block';
+}
+
+function dongFormThongBao() {
+    document.getElementById('modalThongBao').style.display = 'none';
+}
+
+// 2. Admin Gửi thông báo lên Firebase
+function thucHienGuiThongBao() {
+    if(!isAdmin) return;
+    let msg = document.getElementById('noiDungThongBao').value.trim();
+    if(!msg) { alert('Vui lòng nhập nội dung thông báo!'); return; }
+    
+    // Đẩy dữ liệu vào nhánh 'thong_bao_he_thong'
+    db.ref('thong_bao_he_thong').set({
+        noidung: msg,
+        nguoigui: localStorage.getItem('cv_user') || 'Admin',
+        thoigian: Date.now()
+    }).then(() => {
+        dongFormThongBao();
+    });
+}
+
+// 3. Lắng nghe thông báo mới (Áp dụng cho mọi User đang online)
+let isFirstLoadThongBao = true; 
+db.ref('thong_bao_he_thong').on('value', snap => {
+    if(snap.exists()) {
+        let tb = snap.val();
+        
+        // Bỏ qua lần load dữ liệu đầu tiên khi mới mở app (tránh hiện lại thông báo cũ)
+        if(!isFirstLoadThongBao) {
+            hienThiToast("📢 Hệ thống thông báo (" + tb.nguoigui + "):\n\n" + tb.noidung);
+        }
+    }
+    isFirstLoadThongBao = false;
+});
+
+// 4. Hàm vẽ Toast ra màn hình
+function hienThiToast(msg) {
+    let toast = document.getElementById('toastNotif');
+    toast.innerText = msg;
+    toast.className = "toast show";
+    
+    // Tự động ẩn sau 15 giây
+    setTimeout(function() { 
+        toast.className = toast.className.replace("show", ""); 
+    }, 15000);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
 </body>
 </html>
