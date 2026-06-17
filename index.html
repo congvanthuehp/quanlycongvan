@@ -307,13 +307,15 @@
                     </select>
                 </div>
                 <div class="form-group"><label>Trạng thái</label>
-                    <select id="trangThai">
-                        <option value="Chưa xử lý">Chưa xử lý</option>
-                        <option value="Đang xử lý">Đang xử lý</option>
-                        <option value="Hoàn thành">Hoàn thành</option>
-                        <option value="Quá hạn">Quá hạn</option>
-                        <option value="Chuyển kỳ sau">Chuyển kỳ sau</option>
-                    </select>
+                    <select id="trangThai" name="trangThai">
+    <option value="Chưa xử lý">Chưa xử lý</option>
+    <option value="Đang xử lý">Đang xử lý</option>
+    <option value="Hoàn thành">Hoàn thành</option>
+    <option value="Quá hạn">Quá hạn</option>
+    <option value="Chuyển kỳ sau">Chuyển kỳ sau</option>
+    <option value="Thông báo / tham khảo">Thông báo / tham khảo</option>
+    <option value="Gấp">Gấp</option>
+</select>
                 </div>
                 <div class="form-group"><label>Ngày hoàn thành</label><input type="date" id="ngayHoanThanh"></div>
             </div>
@@ -696,6 +698,14 @@
         else if(status === 'Hoàn thành') document.getElementById('card-HoanThanh').classList.add('active');
         else if(status === 'Quá hạn') document.getElementById('card-QuaHan').classList.add('active');
         else if(status === 'Chuyển kỳ sau') document.getElementById('card-ChuyenKySau').classList.add('active');
+        else if(status === 'Thông báo / tham khảo') { 
+            let el = document.getElementById('card-ThongBao'); 
+            if(el) el.classList.add('active'); 
+        }
+        else if(status === 'Gấp') { 
+            let el = document.getElementById('card-Gap'); 
+            if(el) el.classList.add('active'); 
+        }
 
         hienThiBang();
     }
@@ -704,7 +714,7 @@
         thayDoiBoLoc(status); 
     }
 
-    function hienThiBang() {
+   function hienThiBang() {
         let tbody = document.getElementById('bangCongVan');
         tbody.innerHTML = ''; 
 
@@ -718,23 +728,28 @@
         let today = new Date();
         let todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
 
+        // Lọc danh sách chính
         let danhSachDaLoc = danhSachCongVan.filter(item => {
             if (locNgay === 'Hôm nay' && item.ngayDen !== todayStr) return false;
             if (tuNgay !== '' && (!item.ngayDen || item.ngayDen < tuNgay)) return false;
             if (denNgay !== '' && (!item.ngayDen || item.ngayDen > denNgay)) return false;
             if (locTuan !== '' && !(item.tuanBC || '').toLowerCase().includes(locTuan)) return false;
+            
             if (locTo !== '') {
                 let chuoiTo = `${item.bpChuTri} ${item.bpPhoiHop}`.toLowerCase();
                 if (!chuoiTo.includes(locTo)) return false;
             }
+
+            // BỔ SUNG: Tìm kiếm theo Trạng thái ở đây
             if (tuKhoa !== '') {
-                let chuoiChung = `${item.soDen} ${item.coQuanGui} ${item.trichYeu} ${item.canhBao}`.toLowerCase();
+                let chuoiChung = `${item.soDen} ${item.coQuanGui} ${item.trichYeu} ${item.canhBao} ${item.trangThai}`.toLowerCase();
                 if (!chuoiChung.includes(tuKhoa)) return false;
             }
             return true;
         });
 
-        let cAll = 0, cChuaXuLy = 0, cDangXuLy = 0, cHoanThanh = 0, cQuaHan = 0, cChuyenKySau = 0;
+        // Tính toán các thẻ đếm
+        let cAll = 0, cChuaXuLy = 0, cDangXuLy = 0, cHoanThanh = 0, cQuaHan = 0, cChuyenKySau = 0, cThongBao = 0, cGap = 0;
         danhSachDaLoc.forEach(cv => {
             cAll++;
             if(cv.trangThai === 'Chưa xử lý') cChuaXuLy++;
@@ -742,6 +757,8 @@
             else if(cv.trangThai === 'Hoàn thành') cHoanThanh++;
             else if(cv.trangThai === 'Quá hạn') cQuaHan++;
             else if(cv.trangThai === 'Chuyển kỳ sau') cChuyenKySau++;
+            else if(cv.trangThai === 'Thông báo / tham khảo') cThongBao++;
+            else if(cv.trangThai === 'Gấp') cGap++;
         });
 
         if(document.getElementById('countAll')) document.getElementById('countAll').innerText = cAll;
@@ -750,22 +767,40 @@
         if(document.getElementById('countHoanThanh')) document.getElementById('countHoanThanh').innerText = cHoanThanh;
         if(document.getElementById('countQuaHan')) document.getElementById('countQuaHan').innerText = cQuaHan;
         if(document.getElementById('countChuyenKySau')) document.getElementById('countChuyenKySau').innerText = cChuyenKySau;
+        if(document.getElementById('countThongBao')) document.getElementById('countThongBao').innerText = cThongBao;
+        if(document.getElementById('countGap')) document.getElementById('countGap').innerText = cGap;
 
+        // Lọc hiển thị theo Tab đang chọn
         let danhSachHienThi = danhSachDaLoc.filter(item => {
             return (boLocHienTai === 'Tất cả') || (item.trangThai === boLocHienTai);
         });
 
+        // Vẽ bảng
         danhSachHienThi.forEach((cv, i) => {
             let mt = 'bg-info';
+            let badgeStyle = ''; 
+
             if(cv.trangThai === 'Chưa xử lý') mt = 'bg-warning';
             if(cv.trangThai === 'Hoàn thành') mt = 'bg-success';
             if(cv.trangThai === 'Quá hạn') mt = 'bg-danger';
             if(cv.trangThai === 'Chuyển kỳ sau') mt = 'bg-purple';
+            if(cv.trangThai === 'Gấp') mt = 'bg-danger';
+            
+            // Ép chữ màu đen cho "Thông báo / tham khảo"
+            if(cv.trangThai === 'Thông báo / tham khảo') {
+                mt = 'bg-secondary';
+                badgeStyle = 'color: black !important;'; 
+            }
 
             let cb = 'text-antoan';
             if(cv.canhBao === 'Quá hạn') cb = 'text-quahan';
             if(cv.canhBao === 'Hạn cuối cùng') cb = 'text-hancuoi';
             if(cv.canhBao === 'Sắp hết hạn') cb = 'text-saphet';
+            
+            let rowStyle = '';
+            if(cv.trangThai === 'Gấp') {
+                rowStyle = 'background-color: #ffe6e6; color: #cc0000; font-weight: 500;';
+            }
             
             let cotHanhDongHTML = "";
             if(isAdmin) {
@@ -782,7 +817,7 @@
             }
 
             tbody.innerHTML += `
-                <tr onclick="xuLyClick('${cv.key}')">
+                <tr onclick="xuLyClick('${cv.key}')" style="${rowStyle}">
                     <td>${i + 1}</td>
                     <td>${cv.ngayDen}</td>
                     <td>${cv.soDen}</td>
@@ -794,7 +829,7 @@
                     <td>${cv.bpPhoiHop}</td> 
                     <td>${cv.hanXuLy}</td>
                     <td>${cv.soNgayCon}</td>
-                    <td><span class="status-badge ${mt}">${cv.trangThai}</span></td>
+                    <td><span class="status-badge ${mt}" style="${badgeStyle}">${cv.trangThai}</span></td>
                     <td class="${cb}">${cv.canhBao}</td>
                     <td><strong>${cv.tuanBC || ''}</strong></td>
                     ${cotHanhDongHTML}
@@ -802,7 +837,7 @@
             `;
         });
         
-        tbody.innerHTML += `<tr><td colspan="15" style="height: 50px; border:none; background:transparent;"></td></tr>`;
+        tbody.innerHTML += `<tr><td colspan="15" style="height: 300px; border:none; background:transparent; pointer-events:none;"></td></tr>`;
     }
 
     let clickCount = 0;
