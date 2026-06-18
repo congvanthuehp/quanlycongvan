@@ -11,6 +11,81 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
+/* Hiệu ứng rung chuông */
+@keyframes ring {
+    0% { transform: rotate(0); }
+    10% { transform: rotate(15deg); }
+    20% { transform: rotate(-10deg); }
+    30% { transform: rotate(10deg); }
+    40% { transform: rotate(-10deg); }
+    50% { transform: rotate(0); }
+    100% { transform: rotate(0); }
+}
+.ringing {
+    animation: ring 1.5s infinite;
+    display: inline-block;
+    transform-origin: top center;
+}
+
+/* Chữ thông báo mới nhấp nháy */
+.new-notif-text {
+    color: red;
+    font-weight: bold;
+    font-size: 14px;
+    margin-right: 10px;
+    display: none; /* Ẩn mặc định */
+    animation: blink 1s infinite;
+}
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Nút xóa thông báo cho Admin */
+.btn-xoa-tb {
+    background: #dc3545; color: white; border: none; 
+    padding: 3px 8px; border-radius: 4px; cursor: pointer; 
+    float: right; font-size: 12px; font-weight: bold; margin-left: 10px;
+}
+.btn-xoa-tb:hover { background: #c82333; }
+/* Nút Chuông Thông Báo */
+        .btn-bell {
+            background: none; border: none; font-size: 20px; cursor: pointer;
+            position: relative; padding: 5px 10px; margin-right: 15px;
+        }
+        .badge-notif {
+            position: absolute; top: -2px; right: -2px;
+            background: red; color: white; border-radius: 50%;
+            padding: 2px 6px; font-size: 12px; font-weight: bold;
+            display: none; /* Ẩn mặc định, chỉ hiện khi có số lượng */
+        }
+        
+        /* Modal Lịch Sử Thông Báo */
+        .modal-thongbao-list {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);
+        }
+        .modal-thongbao-content {
+            background-color: #fefefe; margin: 5% auto; border-radius: 8px;
+            border: 1px solid #888; width: 90%; max-width: 500px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); overflow: hidden;
+        }
+        .modal-header-tb {
+            background-color: #007bff; color: white; padding: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-body-tb {
+            padding: 0; max-height: 400px; overflow-y: auto; background: #f9f9f9;
+        }
+        .tb-item {
+            padding: 15px; border-bottom: 1px solid #ddd; background: white;
+        }
+        .tb-item.unread { background-color: #e6f7ff; border-left: 4px solid #007bff; }
+        .tb-time { color: #888; font-size: 0.85em; float: right; }
+        .tb-sender { font-weight: bold; color: #333; margin-bottom: 5px; }
+        .tb-msg { margin: 0; white-space: pre-wrap; font-size: 0.95em; color: #444; }
+        
+     
 /* Giao diện thanh thông báo nổi (Toast) */
 .toast {
     visibility: hidden; 
@@ -239,12 +314,50 @@
 </div>
 
 <div class="container" id="mainApp">
-    <div class="header-top">
-        <span id="userInfo" style="font-weight: bold; color: #0056b3; text-transform: uppercase;">Xin chào: </span>
-        <button class="btn-logout" onclick="dangXuat()">Đăng xuất</button>
+    <div class="header-top" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #eee; border-bottom: 2px solid #ccc;">
+        
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span id="userInfo" style="font-weight: bold; color: #0056b3; text-transform: uppercase;">Xin chào: </span>
+            <button id="btnGuiThongBaoAdmin" style="display:none; background:#ff9800; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight: bold;" onclick="moFormThongBao()">📢 GỬI THÔNG BÁO</button>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span id="textCoThongBaoMoi" class="new-notif-text" style="display: none;">📣 Có thông báo mới!</span>
+            
+            <button class="btn-bell" onclick="moLichSuThongBao()" style="margin: 0; position: relative;">
+                <span id="iconChuong">🔔</span> <span id="badgeThongBao" class="badge-notif">0</span>
+            </button>
+            
+            <button class="btn-logout" onclick="dangXuat()">Đăng xuất</button>
+        </div>
     </div>
-    
-    <h2>QUẢN LÝ CÔNG VĂN NỘI BỘ</h2>
+
+    <div id="modalThongBao" class="modal-thongbao-list">
+        <div class="modal-thongbao-content" style="max-width: 450px;">
+            <div class="modal-header-tb" style="background-color: #ff9800; position: relative; padding: 15px;">
+                <h3 style="margin:0; text-align: center; width: 100%;">📢 GỬI THÔNG BÁO</h3>
+                <span style="cursor:pointer; font-weight:bold; font-size: 18px; position: absolute; right: 15px; top: 15px;" onclick="dongFormThongBao()">X</span>
+            </div>
+            <div style="padding: 15px;">
+                <p style="font-size: 13px; color: #666; margin-top: 0;">Nội dung này sẽ hiển thị ngay lập tức trên màn hình của tất cả user.</p>
+                <textarea id="noiDungThongBao" rows="4" style="width:100%; height:100px; margin-bottom:15px; font-size:15px; padding:10px; box-sizing: border-box;" placeholder="Nhập nội dung cần thông báo..."></textarea>
+                <button onclick="thucHienGuiThongBao()" style="background:#ff9800; color:white; padding:10px 15px; border:none; border-radius:4px; cursor:pointer; width:100%; font-weight: bold;">🚀 PHÁT THÔNG BÁO</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalLichSuThongBao" class="modal-thongbao-list">
+        <div class="modal-thongbao-content">
+            <div class="modal-header-tb">
+                <h3 style="margin:0;">🔔 Bảng Thông Báo</h3>
+                <span style="cursor:pointer; font-weight:bold; font-size: 18px;" onclick="dongLichSuThongBao()">X</span>
+            </div>
+            <div class="modal-body-tb" id="danhSachThongBaoList">
+                </div>
+        </div>
+    </div>
+
+    <h2 style="margin-top: 20px;">QUẢN LÝ CÔNG VĂN NỘI BỘ</h2>
 <button class="btn-add" id="btnNotify" style="display: none; background-color: #ff9800; margin-left: 10px;" onclick="moFormThongBao()">📢 GỬI THÔNG BÁO</button>
 
 <div id="modalThongBao" class="modal">
@@ -1068,59 +1181,184 @@
 // TÍNH NĂNG GỬI THÔNG BÁO THỜI GIAN THỰC
 // ==========================================
 
-// 1. Các hàm Mở/Đóng form
-function moFormThongBao() {
-    document.getElementById('noiDungThongBao').value = '';
-    document.getElementById('modalThongBao').style.display = 'block';
-}
+// 1. Mở/Đóng Form Gửi Thông Báo (Dành cho Admin)
+    function moFormThongBao() {
+        document.getElementById('noiDungThongBao').value = '';
+        document.getElementById('modalThongBao').style.display = 'block';
+    }
 
-function dongFormThongBao() {
-    document.getElementById('modalThongBao').style.display = 'none';
-}
+    function dongFormThongBao() {
+        document.getElementById('modalThongBao').style.display = 'none';
+    }
 
-// 2. Admin Gửi thông báo lên Firebase
-function thucHienGuiThongBao() {
-    if(!isAdmin) return;
-    let msg = document.getElementById('noiDungThongBao').value.trim();
-    if(!msg) { alert('Vui lòng nhập nội dung thông báo!'); return; }
+    // 2. Admin Gửi thông báo (Lưu thành mảng bằng .push)
+    function thucHienGuiThongBao() {
+        if(!isAdmin) return;
+        let msg = document.getElementById('noiDungThongBao').value.trim();
+        if(!msg) { alert('Vui lòng nhập nội dung thông báo!'); return; }
+        
+        // Đẩy dữ liệu vào nhánh mới là 'thong_bao_he_thong_danh_sach'
+        db.ref('thong_bao_he_thong_danh_sach').push({
+            noidung: msg,
+            nguoigui: localStorage.getItem('cv_user') || 'Admin',
+            thoigian: Date.now()
+        }).then(() => {
+            alert("Đã gửi thông báo thành công!");
+            dongFormThongBao();
+        }).catch(err => {
+            alert("Lỗi khi gửi: " + err.message);
+        });
+    }
+
+    // 3. Lắng nghe toàn bộ danh sách thông báo để hiển thị ra Bảng & Đếm số lượng
+    db.ref('thong_bao_he_thong_danh_sach').on('value', snap => {
+        danhSachThongBaoToanHeThong = [];
+        let soLuongChuaDoc = 0;
+
+        if(snap.exists()) {
+            snap.forEach(child => {
+                let tb = child.val();
+                danhSachThongBaoToanHeThong.push(tb);
+                
+                // Đếm số thông báo mới (có thời gian lớn hơn lần cuối user mở chuông)
+                if(tb.thoigian > thoiGianXemThongBao) {
+                    soLuongChuaDoc++;
+                }
+            });
+        }
+
+        // Sắp xếp thông báo mới nhất lên đầu (giảm dần theo thời gian)
+        danhSachThongBaoToanHeThong.sort((a, b) => b.thoigian - a.thoigian);
+
+        // Hiển thị con số đỏ lên nút Chuông
+        let badge = document.getElementById('badgeThongBao');
+        if(badge) {
+            if(soLuongChuaDoc > 0) {
+                badge.innerText = soLuongChuaDoc;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Cập nhật lại giao diện Bảng thông báo (nếu nó đang mở)
+        renderBangThongBao();
+    });
+
+  let danhSachThongBaoToanHeThong = [];
+    let thoiGianXemThongBao = localStorage.getItem('thoiGianXemThongBao') || 0;
+
+   // 2. Mở/Đóng Bảng Lịch Sử Thông Báo (User)
+function moLichSuThongBao() {
+    document.getElementById('modalLichSuThongBao').style.display = 'block';
     
-    // Đẩy dữ liệu vào nhánh 'thong_bao_he_thong'
-    db.ref('thong_bao_he_thong').set({
-        noidung: msg,
-        nguoigui: localStorage.getItem('cv_user') || 'Admin',
-        thoigian: Date.now()
-    }).then(() => {
-        dongFormThongBao();
+    // Cập nhật lại thời gian xem thông báo cho MÁY NÀY
+    thoiGianXemThongBao = Date.now();
+    localStorage.setItem('thoiGianXemThongBao', thoiGianXemThongBao);
+    
+    // Tắt số đỏ, tắt chuông rung, tắt chữ ngay lập tức
+    let badge = document.getElementById('badgeThongBao');
+    if(badge) badge.style.display = 'none';
+    let iconChuong = document.getElementById('iconChuong');
+    if(iconChuong) iconChuong.classList.remove('ringing');
+    let textCoThongBaoMoi = document.getElementById('textCoThongBaoMoi');
+    if(textCoThongBaoMoi) textCoThongBaoMoi.style.display = 'none';
+
+    renderBangThongBao();
+}
+
+    function dongLichSuThongBao() {
+    document.getElementById('modalLichSuThongBao').style.display = 'none';
+}
+// 4. Lắng nghe dữ liệu Danh sách Thông báo
+db.ref('thong_bao_he_thong_danh_sach').on('value', snap => {
+    danhSachThongBaoToanHeThong = [];
+    let soLuongChuaDoc = 0;
+
+    if(snap.exists()) {
+        snap.forEach(child => {
+            let tb = child.val();
+            tb.key = child.key; // Lấy thêm ID của thông báo để Admin có thể xóa
+            danhSachThongBaoToanHeThong.push(tb);
+            
+            // Nếu thông báo gửi sau thời điểm xem cuối cùng của máy tính này
+            if(tb.thoigian > thoiGianXemThongBao) {
+                soLuongChuaDoc++;
+            }
+        });
+    }
+
+    danhSachThongBaoToanHeThong.sort((a, b) => b.thoigian - a.thoigian);
+
+    // Xử lý bật/tắt chuông rung và chữ thông báo mới
+    let badge = document.getElementById('badgeThongBao');
+    let iconChuong = document.getElementById('iconChuong');
+    let textCoThongBaoMoi = document.getElementById('textCoThongBaoMoi');
+
+    if(soLuongChuaDoc > 0) {
+        if(badge) { badge.innerText = soLuongChuaDoc; badge.style.display = 'inline-block'; }
+        if(iconChuong) iconChuong.classList.add('ringing'); // Bật rung
+        if(textCoThongBaoMoi) textCoThongBaoMoi.style.display = 'inline-block'; // Bật chữ
+    } else {
+        if(badge) badge.style.display = 'none';
+        if(iconChuong) iconChuong.classList.remove('ringing'); // Tắt rung
+        if(textCoThongBaoMoi) textCoThongBaoMoi.style.display = 'none'; // Tắt chữ
+    }
+
+    renderBangThongBao();
+});
+    // 6. Hàm hiển thị danh sách thông báo vào Modal (Có thêm nút Xóa cho Admin)
+function renderBangThongBao() {
+    let container = document.getElementById('danhSachThongBaoList');
+    if(!container) return;
+    
+    container.innerHTML = '';
+    
+    if(danhSachThongBaoToanHeThong.length === 0) {
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #888;">Chưa có thông báo nào.</div>';
+        return;
+    }
+
+    danhSachThongBaoToanHeThong.forEach(tb => {
+        let isUnread = tb.thoigian > thoiGianXemThongBao ? 'unread' : '';
+        let dateObj = new Date(tb.thoigian);
+        let timeString = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+
+        // Chỉ Admin mới có nút Xóa thông báo
+        let nutXoaHTMl = isAdmin ? `<button class="btn-xoa-tb" onclick="xoaThongBao('${tb.key}')">🗑️ Xóa</button>` : ``;
+
+        container.innerHTML += `
+            <div class="tb-item ${isUnread}">
+                <div class="tb-time">🕒 ${timeString} ${nutXoaHTMl}</div>
+                <div class="tb-sender">👤 ${tb.nguoigui}</div>
+                <p class="tb-msg">${tb.noidung}</p>
+            </div>
+        `;
     });
 }
-
-// 3. Lắng nghe thông báo mới (Áp dụng cho mọi User đang online)
-let isFirstLoadThongBao = true; 
-db.ref('thong_bao_he_thong').on('value', snap => {
-    if(snap.exists()) {
-        let tb = snap.val();
-        
-        // Bỏ qua lần load dữ liệu đầu tiên khi mới mở app (tránh hiện lại thông báo cũ)
-        if(!isFirstLoadThongBao) {
-            hienThiToast("📢 Hệ thống thông báo (" + tb.nguoigui + "):\n\n" + tb.noidung);
-        }
+// 9. THÊM MỚI: Hàm Xóa Thông Báo (Chỉ dành cho Admin)
+function xoaThongBao(key) {
+    if(!isAdmin) return;
+    if(confirm("Bạn có chắc chắn muốn XÓA thông báo này khỏi hệ thống không?")) {
+        db.ref('thong_bao_he_thong_danh_sach/' + key).remove()
+        .then(() => {
+            // Firebase sẽ tự động cập nhật lại danh sách và ẩn thông báo
+        })
+        .catch(err => {
+            alert("Lỗi khi xóa: " + err.message);
+        });
     }
-    isFirstLoadThongBao = false;
-});
-
-// 4. Hàm vẽ Toast ra màn hình
-function hienThiToast(msg) {
-    let toast = document.getElementById('toastNotif');
-    toast.innerText = msg;
-    toast.className = "toast show";
-    
-    // Tự động ẩn sau 15 giây
-    setTimeout(function() { 
-        toast.className = toast.className.replace("show", ""); 
-    }, 15000);
 }
+  
 
-
+    // Hàm hỗ trợ hiện nút admin lúc load trang (bạn tự gọi trong hàm checkLogin của bạn nhé)
+    window.addEventListener('DOMContentLoaded', () => {
+        // Giả sử có biến isAdmin, nếu có thì hiện nút "Gửi Thông Báo"
+        if(typeof isAdmin !== 'undefined' && isAdmin) {
+            let btnAdmin = document.getElementById('btnGuiThongBaoAdmin');
+            if(btnAdmin) btnAdmin.style.display = "inline-block";
+        }
+    });
 
 
 
