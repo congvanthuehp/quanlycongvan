@@ -1346,8 +1346,7 @@ function renderBangThongBao() {
 
     danhSachThongBaoToanHeThong.forEach(tb => {
         // Kiểm tra trạng thái unread dựa trên mảng Firebase thay vì localStorage cũ
-        let isUnread = !tb.daXemList.includes(currentUser) ? 'unread' : '';
-        
+let isUnread = !(tb.daXemList && tb.daXemList.includes(currentUser)) ? 'unread' : '';        
         let dateObj = new Date(tb.thoigian);
         let timeString = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
 
