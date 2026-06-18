@@ -1249,14 +1249,13 @@
     let thoiGianXemThongBao = localStorage.getItem('thoiGianXemThongBao') || 0;
 
    // 2. Mở/Đóng Bảng Lịch Sử Thông Báo (User)
+// Cập nhật hàm mở lịch sử thông báo - Ghi nhận User đã đọc lên Firebase
 function moLichSuThongBao() {
     document.getElementById('modalLichSuThongBao').style.display = 'block';
     
-    // Cập nhật lại thời gian xem thông báo cho MÁY NÀY
-    thoiGianXemThongBao = Date.now();
-    localStorage.setItem('thoiGianXemThongBao', thoiGianXemThongBao);
+    let currentUser = localStorage.getItem('cv_user') || 'Anonym';
     
-    // Tắt số đỏ, tắt chuông rung, tắt chữ ngay lập tức
+    // Tắt số đỏ, tắt chuông rung, tắt chữ ngay lập tức trên máy này
     let badge = document.getElementById('badgeThongBao');
     if(badge) badge.style.display = 'none';
     let iconChuong = document.getElementById('iconChuong');
@@ -1264,50 +1263,74 @@ function moLichSuThongBao() {
     let textCoThongBaoMoi = document.getElementById('textCoThongBaoMoi');
     if(textCoThongBaoMoi) textCoThongBaoMoi.style.display = 'none';
 
+    // Đánh dấu tất cả thông báo hiện tại là "Đã xem" cho User này trên Firebase
+    if (danhSachThongBaoToanHeThong.length > 0) {
+        danhSachThongBaoToanHeThong.forEach(tb => {
+            // Lưu đường dẫn: thong_bao_da_doc/{Mã_Thông_Báo}/{Tên_User} = Thời gian xem
+            db.ref('thong_bao_da_doc/' + tb.key + '/' + currentUser).set(Date.now());
+        });
+    }
+
     renderBangThongBao();
 }
-
     function dongLichSuThongBao() {
     document.getElementById('modalLichSuThongBao').style.display = 'none';
 }
 // 4. Lắng nghe dữ liệu Danh sách Thông báo
+// Lắng nghe dữ liệu Thông báo và trạng thái Đã đọc từ Firebase
 db.ref('thong_bao_he_thong_danh_sach').on('value', snap => {
     danhSachThongBaoToanHeThong = [];
-    let soLuongChuaDoc = 0;
+    let currentUser = localStorage.getItem('cv_user') || 'Anonym';
 
     if(snap.exists()) {
-        snap.forEach(child => {
-            let tb = child.val();
-            tb.key = child.key; // Lấy thêm ID của thông báo để Admin có thể xóa
-            danhSachThongBaoToanHeThong.push(tb);
-            
-            // Nếu thông báo gửi sau thời điểm xem cuối cùng của máy tính này
-            if(tb.thoigian > thoiGianXemThongBao) {
-                soLuongChuaDoc++;
+        // Lấy thêm bảng danh sách những người đã đọc từ Firebase
+        db.ref('thong_bao_da_doc').once('value', docSnap => {
+            let dataDaDoc = docSnap.val() || {};
+
+            let soLuongChuaDoc = 0;
+
+            snap.forEach(child => {
+                let tb = child.val();
+                tb.key = child.key;
+                
+                // Lấy danh sách các user đã đọc của thông báo này
+                let danhSachUserDaXem = dataDaDoc[tb.key] ? Object.keys(dataDoc = dataDaDoc[tb.key]) : [];
+                tb.daXemList = danhSachUserDaXem; // Lưu vào mảng để hiển thị công khai
+
+                // Kiểm tra xem chính User đang đăng nhập này đã đọc chưa
+                if (!danhSachUserDaXem.includes(currentUser)) {
+                    soLuongChuaDoc++;
+                }
+                
+                danhSachThongBaoToanHeThong.push(tb);
+            });
+
+            // Sắp xếp thông báo mới lên đầu
+            danhSachThongBaoToanHeThong.sort((a, b) => b.thoigian - a.thoigian);
+
+            // Xử lý giao diện Chuông Rung và Chữ báo
+            let badge = document.getElementById('badgeThongBao');
+            let iconChuong = document.getElementById('iconChuong');
+            let textCoThongBaoMoi = document.getElementById('textCoThongBaoMoi');
+
+            if(soLuongChuaDoc > 0) {
+                if(badge) { badge.innerText = soLuongChuaDoc; badge.style.display = 'inline-block'; }
+                if(iconChuong) iconChuong.classList.add('ringing');
+                if(textCoThongBaoMoi) textCoThongBaoMoi.style.display = 'inline-block';
+            } else {
+                if(badge) badge.style.display = 'none';
+                if(iconChuong) iconChuong.classList.remove('ringing');
+                if(textCoThongBaoMoi) textCoThongBaoMoi.style.display = 'none';
             }
+
+            renderBangThongBao();
         });
-    }
-
-    danhSachThongBaoToanHeThong.sort((a, b) => b.thoigian - a.thoigian);
-
-    // Xử lý bật/tắt chuông rung và chữ thông báo mới
-    let badge = document.getElementById('badgeThongBao');
-    let iconChuong = document.getElementById('iconChuong');
-    let textCoThongBaoMoi = document.getElementById('textCoThongBaoMoi');
-
-    if(soLuongChuaDoc > 0) {
-        if(badge) { badge.innerText = soLuongChuaDoc; badge.style.display = 'inline-block'; }
-        if(iconChuong) iconChuong.classList.add('ringing'); // Bật rung
-        if(textCoThongBaoMoi) textCoThongBaoMoi.style.display = 'inline-block'; // Bật chữ
     } else {
-        if(badge) badge.style.display = 'none';
-        if(iconChuong) iconChuong.classList.remove('ringing'); // Tắt rung
-        if(textCoThongBaoMoi) textCoThongBaoMoi.style.display = 'none'; // Tắt chữ
+        renderBangThongBao();
     }
-
-    renderBangThongBao();
 });
     // 6. Hàm hiển thị danh sách thông báo vào Modal (Có thêm nút Xóa cho Admin)
+// Hàm hiển thị danh sách thông báo vào Modal (Hiển thị thêm danh sách người đã đọc cho Admin)
 function renderBangThongBao() {
     let container = document.getElementById('danhSachThongBaoList');
     if(!container) return;
@@ -1319,30 +1342,51 @@ function renderBangThongBao() {
         return;
     }
 
+    let currentUser = localStorage.getItem('cv_user') || 'Anonym';
+
     danhSachThongBaoToanHeThong.forEach(tb => {
-        let isUnread = tb.thoigian > thoiGianXemThongBao ? 'unread' : '';
+        // Kiểm tra trạng thái unread dựa trên mảng Firebase thay vì localStorage cũ
+        let isUnread = !tb.daXemList.includes(currentUser) ? 'unread' : '';
+        
         let dateObj = new Date(tb.thoigian);
         let timeString = dateObj.toLocaleDateString('vi-VN') + " " + dateObj.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
 
-        // Chỉ Admin mới có nút Xóa thông báo
         let nutXoaHTMl = isAdmin ? `<button class="btn-xoa-tb" onclick="xoaThongBao('${tb.key}')">🗑️ Xóa</button>` : ``;
 
+        // Tạo dòng danh sách người đã xem (Chỉ Admin nhìn thấy)
+        let dongNguoiDaXemHTML = "";
+        if (isAdmin) {
+            if (tb.daXemList && tb.daXemList.length > 0) {
+                dongNguoiDaXemHTML = `<div style="margin-top: 8px; font-size: 12px; color: #28a745; background: #e8f5e9; padding: 4px 8px; border-radius: 4px;">
+                    👁️ <strong>Đã xem:</strong> ${tb.daXemList.join(', ')}
+                </div>`;
+            } else {
+                dongNguoiDaXemHTML = `<div style="margin-top: 8px; font-size: 12px; color: #666; background: #eee; padding: 4px 8px; border-radius: 4px;">
+                    👁️ <strong>Đã xem:</strong> Chưa có ai xem
+                </div>`;
+            }
+        }
+
         container.innerHTML += `
-            <div class="tb-item ${isUnread}">
-                <div class="tb-time">🕒 ${timeString} ${nutXoaHTMl}</div>
-                <div class="tb-sender">👤 ${tb.nguoigui}</div>
-                <p class="tb-msg">${tb.noidung}</p>
+            <div class="tb-item ${isUnread}" style="border-bottom: 1px solid #ddd; padding: 12px; background: ${isUnread ? '#e6f7ff' : '#fff'}">
+                <div class="tb-time" style="font-size: 12px; color: #888;">🕒 ${timeString} ${nutXoaHTMl}</div>
+                <div class="tb-sender" style="font-weight: bold; color: #333;">👤 ${tb.nguoigui}</div>
+                <p class="tb-msg" style="margin: 5px 0; white-space: pre-wrap;">${tb.noidung}</p>
+                ${dongNguoiDaXemHTML}
             </div>
         `;
     });
 }
 // 9. THÊM MỚI: Hàm Xóa Thông Báo (Chỉ dành cho Admin)
+// Hàm Xóa Thông Báo (Xóa sạch thông báo và danh sách người đã xem)
 function xoaThongBao(key) {
     if(!isAdmin) return;
     if(confirm("Bạn có chắc chắn muốn XÓA thông báo này khỏi hệ thống không?")) {
+        // Xóa nội dung thông báo
         db.ref('thong_bao_he_thong_danh_sach/' + key).remove()
         .then(() => {
-            // Firebase sẽ tự động cập nhật lại danh sách và ẩn thông báo
+            // Xóa luôn danh sách người đã xem đi kèm
+            db.ref('thong_bao_da_doc/' + key).remove();
         })
         .catch(err => {
             alert("Lỗi khi xóa: " + err.message);
