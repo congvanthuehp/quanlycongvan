@@ -906,9 +906,12 @@
 
             // BỔ SUNG: Tìm kiếm theo Trạng thái ở đây
             if (tuKhoa !== '') {
-                let chuoiChung = `${item.soDen} ${item.coQuanGui} ${item.trichYeu} ${item.canhBao} ${item.trangThai}`.toLowerCase();
-                if (!chuoiChung.includes(tuKhoa)) return false;
-            }
+    let chuoiChung = Object.values(item)
+        .join(' ')
+        .toLowerCase();
+
+    if (!chuoiChung.includes(tuKhoa)) return false;
+}
             return true;
         });
 
@@ -1402,28 +1405,6 @@ function xoaThongBao(key) {
             if(btnAdmin) btnAdmin.style.display = "inline-block";
         }
     });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 </script>
