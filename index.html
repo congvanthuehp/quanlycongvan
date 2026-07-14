@@ -1978,25 +1978,46 @@ function initCalendar() {
             db.ref('lich_hop').once('value').then((snapshot) => {
                 let events = [];
                 
-                // Đọc trạng thái nút lọc từ giao diện HTML
+                // Đọc trạng thái nút lọc từ giao diện HTML (nếu có check vào nút thì dangLoc = true)
                 let btnLoc = document.getElementById('btnLocLanhDao');
-                let dangLoc = btnLoc ? btnLoc.checked : false;
+                let dangLoc = btnLoc ? btnLoc.checked : false; 
+                
+                // 💡 LƯU Ý: Nếu bạn muốn LÚC NÀO CŨNG CHỈ HIỆN lịch Lãnh đạo (không cần nút bấm), 
+                // hãy xóa 2 dòng trên và đổi thành: let dangLoc = true;
+
+                // Danh sách từ khóa nhận diện Lãnh đạo TCS (viết thường để so sánh chính xác)
+                let tuKhoaLanhDao = [
+                    "d/c hồng trưởng tcs",
+                    "d/c tuyến phó trưởng tcs",
+                    "d/c hiệp phó trưởng tcs",
+                    "trưởng tcs", // từ khóa dự phòng
+                    "phó trưởng tcs" // từ khóa dự phòng
+                ];
 
                 snapshot.forEach(child => {
                     let data = child.val();
                     
-                    // Chuẩn hóa dữ liệu về chữ thường để tránh lỗi lệch chữ Hoa/Thường
+                    // Chuẩn hóa dữ liệu về chữ thường để tránh lỗi viết Hoa/thường
                     let nguoiChuTri = String(data.nguoiChuTri || '').toLowerCase();
                     let thanhPhan = Array.isArray(data.thanhPhan) 
                         ? data.thanhPhan.map(val => String(val).toLowerCase()) 
                         : [];
 
-                    // Kiểm tra sự xuất hiện của "truongtcs" hoặc "photruongtcs"
-                    let coTruongTCS = nguoiChuTri.includes('truongtcs') || thanhPhan.some(val => val.includes('truongtcs'));
-                    let coPhoTruongTCS = nguoiChuTri.includes('photruongtcs') || thanhPhan.some(val => val.includes('photruongtcs'));
+                    // KIỂM TRA XEM CUỘC HỌP CÓ SỰ THAM GIA CỦA 1 TRONG 3 LÃNH ĐẠO KHÔNG?
+                    let coLanhDaoThamGia = false;
+                    
+                    // 1. Kiểm tra người chủ trì có phải Lãnh đạo không?
+                    if (tuKhoaLanhDao.some(tuKhoa => nguoiChuTri.includes(tuKhoa))) {
+                        coLanhDaoThamGia = true;
+                    }
+                    
+                    // 2. Kiểm tra thành phần tham dự có chứa Lãnh đạo không?
+                    if (!coLanhDaoThamGia && thanhPhan.some(nguoi => tuKhoaLanhDao.some(tuKhoa => nguoi.includes(tuKhoa)))) {
+                        coLanhDaoThamGia = true;
+                    }
 
-                    // Lọc dữ liệu: Nếu KHÔNG bật lọc, HOẶC (có bật lọc VÀ thỏa mãn điều kiện chứa Trưởng/Phó)
-                    if (!dangLoc || (coTruongTCS || coPhoTruongTCS)) {
+                    // Lọc dữ liệu: Nếu KHÔNG bật lọc, HOẶC (có bật lọc VÀ thỏa mãn điều kiện có Lãnh đạo)
+                    if (!dangLoc || coLanhDaoThamGia) {
                         events.push({
                             id: child.key,
                             title: data.tenCuocHop + " (" + data.phongHop + ")",
@@ -2015,22 +2036,25 @@ function initCalendar() {
         },
 
         // HIỂN THỊ NỘI DUNG CHI TIẾT & NÚT XÓA Ở BẢN MOBILE (LIST VIEW)
+ // HIỂN THỊ NỘI DUNG CHI TIẾT & NÚT XÓA Ở BẢN MOBILE (LIST VIEW)
         eventDidMount: function(info) {
             if (info.view.type === 'listMonth') {
                 let titleEl = info.el.querySelector('.fc-list-event-title');
                 if (titleEl) {
-                    // Tránh tạo lặp lại nội dung khi hàm này chạy nhiều lần
                     if (!titleEl.querySelector('.custom-event-details')) {
                         let p = info.event.extendedProps;
                         let dsThamDu = (p.thanhPhan && p.thanhPhan.length > 0) ? p.thanhPhan.join(', ') : 'Không có';
                         
-                        // Nếu là admin thì tạo thêm HTML nút Xóa màu đỏ rực rỡ
+                        // LẤY TÊN USER ĐANG ĐĂNG NHẬP
+                        let currentUser = localStorage.getItem('cv_user') || '';
                         let nutXoaHtml = '';
-                        if (typeof isAdmin !== 'undefined' && isAdmin) {
+                        
+                        // KIỂM TRA ĐIỀU KIỆN: Chỉ người tạo ra lịch này mới thấy nút xóa
+                        if (p.nguoiTao === currentUser) {
                             nutXoaHtml = `
                                 <button onclick="event.stopPropagation(); xoaCuocHop('${info.event.id}')" 
                                     style="margin-top: 10px; background-color: #dc3545; color: white; border: none; padding: 10px 12px; border-radius: 6px; width: 100%; font-weight: bold; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 4px rgba(220, 53, 69, 0.15);">
-                                    🗑️ Xóa cuộc họp này
+                                    🗑️ Xóa lịch do tôi tạo
                                 </button>
                             `;
                         }
@@ -2062,21 +2086,43 @@ function initCalendar() {
         eventClick: function(info) {
             let p = info.event.extendedProps;
             let dsThamDu = (p.thanhPhan && p.thanhPhan.length > 0) ? p.thanhPhan.join(', ') : 'Không có';
-            let detailText = `📌 Họp: ${p.tenCuocHop}\n🏢 Phòng: ${p.phongHop}\n👤 Chủ trì: ${p.nguoiChuTri}\n👥 Phòng ban: ${dsThamDu}\n📝 Nội dung: ${p.noiDung || 'Không có'}`;
             
-            // Nếu là admin, click vào sẽ cho phép lựa chọn Xóa cuộc họp
-            if (typeof isAdmin !== 'undefined' && isAdmin) {
-                let xacNhanXoa = confirm(`${detailText}\n\n👉 Bạn có muốn XÓA cuộc họp này không?`);
-                if (xacNhanXoa) {
-                    xoaCuocHop(info.event.id);
-                }
+            // Xử lý bôi màu nổi bật cho các Lãnh đạo
+            let chuTriHienThi = highlightLanhDao(p.nguoiChuTri);
+            let thanhPhanHienThi = highlightLanhDao(dsThamDu);
+
+            // Đẩy dữ liệu vào Modal HTML
+            document.getElementById('ct_tenCuocHop').innerHTML = `📌 ${p.tenCuocHop}`;
+            document.getElementById('ct_phongHop').innerHTML = p.phongHop;
+            document.getElementById('ct_thoiGian').innerHTML = `${p.gioBatDau} - ${p.gioKetThuc} (Ngày ${p.ngayHop})`;
+            document.getElementById('ct_chuTri').innerHTML = chuTriHienThi;
+            document.getElementById('ct_thanhPhan').innerHTML = thanhPhanHienThi;
+            document.getElementById('ct_noiDung').innerText = p.noiDung || 'Không có';
+
+            // Xử lý logic hiển thị nút Xóa
+            let currentUser = localStorage.getItem('cv_user') || '';
+            let khuVucXoa = document.getElementById('khuVucXoaLich');
+            let btnXoa = document.getElementById('btnXacNhanXoaModal');
+
+            if (p.nguoiTao === currentUser) {
+                // Là người tạo -> Hiện khu vực hỏi xóa
+                khuVucXoa.style.display = 'block';
+                btnXoa.onclick = function() {
+                    // Gọi hàm xóa firebase cũ của bạn
+                    xoaCuocHop(info.event.id); 
+                    dongModalChiTiet(); // Đóng bảng sau khi xóa
+                };
             } else {
-                // Người dùng bình thường chỉ hiển thị thông báo xem chi tiết
-                alert(detailText);
+                // Không phải người tạo -> Ẩn khu vực xóa, chỉ cho xem chi tiết
+                khuVucXoa.style.display = 'none';
+                btnXoa.onclick = null;
             }
+
+            // Mở Modal lên màn hình
+            document.getElementById('modalChiTietHop').style.display = 'block';
         },
         dateClick: function(info) {
-            if (typeof isAdmin === 'undefined' || !isAdmin) return;
+            // Đã bỏ điều kiện check Admin. Ai bấm vào ngày cũng mở được form đặt lịch.
             moModalDatLich(info.dateStr); 
         },
         windowResize: function(arg) {
@@ -2096,6 +2142,7 @@ function initCalendar() {
         if(calendar) calendar.refetchEvents(); 
     });
 }
+
 // Cờ đánh dấu để tránh việc load lại toàn bộ dữ liệu cũ lúc ban đầu rồi hiển thị thông báo dồn dập
 let daLoadXongDuLieuBanDau = false;
 
@@ -2119,26 +2166,41 @@ db.ref('lich_hop').on('child_added', (snapshot) => {
         }
     }
 });
+
 // ==========================================================================
 // 4. QUẢN LÝ BIỂU MẪU ĐẶT LỊCH (MODAL ACTIONS & LOGIC VALIDATE)
 // ==========================================================================
+
 function renderCheckboxPhongBan() {
     let grid = document.getElementById('danhSachThamDuGrid');
     if(!grid) return;
     grid.innerHTML = '';
     
-    // Kiểm tra tính sẵn sàng của mảng danh mục phòng ban
+    // 1. CHÈN 3 NGƯỜI CỐ ĐỊNH (LÃNH ĐẠO TCS)
+    let danhSachLanhDaoTCS = [
+        "D/C Hồng Trưởng TCS",
+        "D/C Tuyến Phó Trưởng TCS",
+        "D/C Hiệp Phó Trưởng TCS"
+    ];
+
+    // Render danh sách lãnh đạo với style nổi bật
+    danhSachLanhDaoTCS.forEach(ld => {
+        grid.innerHTML += `
+        <label class="cb-label-item" style="background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; font-weight: bold; color: #856404;">
+            <input type="checkbox" class="cb-thanhphan" value="${ld}"> 
+            <span>${ld}</span>
+        </label>`;
+    });
+    
+    // 2. CHÈN DANH SÁCH USER/PHÒNG BAN BÌNH THƯỜNG
     if(typeof danhSachUserThuong !== 'undefined' && danhSachUserThuong.length > 0) {
         danhSachUserThuong.forEach(pb => {
-            // Thay thế inline style cũ bằng class "cb-label-item"
             grid.innerHTML += `
             <label class="cb-label-item">
                 <input type="checkbox" class="cb-thanhphan" value="${pb}"> 
                 <span>${pb}</span>
             </label>`;
         });
-    } else {
-        grid.innerHTML = '<span style="color:#999; font-size:12px;">Không có danh sách phòng ban.</span>';
     }
 }
 function chonTatCaThamDu(checkboxAll) {
@@ -2146,13 +2208,8 @@ function chonTatCaThamDu(checkboxAll) {
     cbs.forEach(cb => cb.checked = checkboxAll.checked);
 }
 
-// Hàm mở Modal Đặt lịch mới (Đã gộp phần trùng lặp)
+// Hàm mở Modal Đặt lịch mới (Dành cho tất cả mọi người)
 function moModalDatLich(ngayDuocChon = null) {
-    if (!isAdmin) { 
-        alert("Chỉ Admin mới có quyền đặt lịch!"); 
-        return; 
-    }
-    
     let modal = document.getElementById('modalDatLichHop');
     if(modal) {
         modal.style.display = 'block';
@@ -2162,15 +2219,15 @@ function moModalDatLich(ngayDuocChon = null) {
             oNgayHop.value = ngayDuocChon ? ngayDuocChon : new Date().toISOString().split('T')[0];
         }
         
-        // Tự động điền tên Admin vào trường người chủ trì (giả định)
+        // Tự động điền tên User đang đăng nhập vào trường người chủ trì
         let oNguoiChuTri = document.getElementById('nguoiChuTri');
         if(oNguoiChuTri && !oNguoiChuTri.value) {
-            oNguoiChuTri.value = 'Admin'; // Bạn có thể thay bằng biến lưu tên user đăng nhập
+            oNguoiChuTri.value = localStorage.getItem('cv_user') || 'Chưa rõ tên'; 
         }
     }
 }
 
-// Hàm đóng Modal Đặt lịch (Đã gộp phần trùng lặp)
+// Hàm đóng Modal Đặt lịch
 function dongModalDatLich() {
     let modal = document.getElementById('modalDatLichHop');
     if(modal) {
@@ -2202,13 +2259,9 @@ function resetFormLichHop() {
     document.querySelectorAll('.cb-thanhphan').forEach(cb => cb.checked = false);
 }
 
-// Lưu thông tin lịch họp lên Firebase
+// Lưu thông tin lịch họp lên Firebase (Dành cho tất cả mọi người)
+// Lưu thông tin lịch họp lên Firebase (Dành cho tất cả mọi người)
 function luuLichHop() {
-    if (!isAdmin) { 
-        alert("Chỉ Admin mới có quyền đặt lịch!"); 
-        return; 
-    }
-
     let tenCuocHop = document.getElementById('tenCuocHop').value.trim();
     let loaiCuocHop = document.getElementById('loaiCuocHop').value;
     let phongHop = document.getElementById('phongHop').value;
@@ -2216,8 +2269,13 @@ function luuLichHop() {
     let gioBatDau = document.getElementById('gioBatDau').value;
     let gioKetThuc = document.getElementById('gioKetThuc').value;
     let noiDung = document.getElementById('noiDungHop').value.trim();
-    let nguoiChuTri = document.getElementById('nguoiChuTri').value || 'Admin';
     
+    // Người chủ trì (có thể sửa trong form)
+    let nguoiChuTri = document.getElementById('nguoiChuTri').value.trim() || localStorage.getItem('cv_user') || 'Chưa rõ';
+    
+    // NGƯỜI TẠO LỊCH (Lấy mặc định ẩn danh trong background, để quản lý quyền xóa)
+    let currentUser = localStorage.getItem('cv_user') || 'Người dùng ẩn danh';
+
     let thanhPhan = [];
     document.querySelectorAll('.cb-thanhphan:checked').forEach(cb => thanhPhan.push(cb.value));
 
@@ -2242,10 +2300,10 @@ function luuLichHop() {
         gioKetThuc: gioKetThuc,
         thanhPhan: thanhPhan, 
         noiDung: noiDung,
-        ngayTao: Date.now()
+        ngayTao: Date.now(),
+        nguoiTao: currentUser // <-- LƯU VÀO FIREBASE TẠI ĐÂY
     };
 
-    // Vô hiệu hóa nút lưu tạm thời để tránh click đúp (Double-click prevention)
     let btnSubmit = document.querySelector('#modalDatLichHop .btn-primary');
     if(btnSubmit) btnSubmit.disabled = true;
 
@@ -2255,57 +2313,14 @@ function luuLichHop() {
     }).catch(err => {
         alert("Lỗi: " + err.message);
     }).finally(() => {
-        // Mở khóa lại nút lưu
         if(btnSubmit) btnSubmit.disabled = false;
     });
 }
-// Làm sạch form dữ liệu
-function resetFormLichHop() {
-    document.getElementById('tenCuocHop').value = '';
-    document.getElementById('loaiCuocHop').selectedIndex = 0;
-    document.getElementById('phongHop').selectedIndex = 0;
-    document.getElementById('ngayHop').value = '';
-    document.getElementById('gioBatDau').value = '';
-    document.getElementById('gioKetThuc').value = '';
-    document.getElementById('noiDungHop').value = '';
-    
-    let chkAll = document.getElementById('checkAllThamDu');
-    if(chkAll) chkAll.checked = false;document.querySelectorAll('.cb-thanhphan').forEach(cb => cb.checked = false);}
 
-// Hàm mở Modal Đặt lịch mới (Hỗ trợ tự động điền ngày nếu chọn từ Lịch)
-function moModalDatLich(dateStr) {
-    let modal = document.getElementById('modalDatLichHop');
-    if (modal) {
-        // Sử dụng 'block' để kích hoạt absolute centering trong CSS hoạt động hoàn hảo
-        modal.style.display = 'block'; 
-        
-        // (Phần code gán ngày dateStr của bạn giữ nguyên bên dưới...)
-        let ngayHopInput = document.getElementById('ngayHop');
-        if (ngayHopInput) ngayHopInput.value = dateStr;
-    }
-}// Hàm đóng Modal Đặt lịch họp
-function dongModalDatLich() {
-    document.getElementById('modalDatLichHop').style.display = 'none';
-    resetFormLichHop();
-}
-
-// Đóng modal thông minh khi click chuột ra vùng nền mờ phía bên ngoài form nhập liệu
-function dongModalDatLichNgoai(event) {
-    if (event.target.id === 'modalDatLichHop') {
-        dongModalDatLich();
-    }
-}
-// HÀM XỬ LÝ XÓA CUỘC HỌP (DÀNH CHO ADMIN)
-// HÀM XỬ LÝ XÓA CUỘC HỌP TRÊN FIREBASE
+// HÀM XỬ LÝ XÓA CUỘC HỌP TRÊN FIREBASE (Dành cho tất cả mọi người)
 window.xoaCuocHop = function(eventId) {
-    // Kiểm tra quyền Admin bảo mật trước khi xóa
-    if (typeof isAdmin === 'undefined' || !isAdmin) {
-        alert("Bạn không có quyền thực hiện chức năng này!");
-        return;
-    }
-
-    // Hiện hộp thoại cảnh báo trước khi xóa
-    let xacNhan = confirm("⚠️ CẢNH BÁO:\nBạn có chắc chắn muốn XÓA cuộc họp này không?\nHành động này sẽ xóa vĩnh viễn trên hệ thống!");
+    // Hiện hộp thoại cảnh báo trước khi xóa (Bắt buộc để tránh xóa nhầm)
+    let xacNhan = confirm("⚠️ CẢNH BÁO:\nBạn có chắc chắn muốn XÓA cuộc họp này không?\nHành động này sẽ xóa vĩnh viễn trên toàn hệ thống!");
     
     if (xacNhan) {
         db.ref('lich_hop').child(eventId).remove()
@@ -2325,7 +2340,6 @@ window.xoaCuocHop = function(eventId) {
 
 // Hàm tạo và hiển thị thông báo dạng Toast rực rỡ
 function hienThiThongBaoMoi(data) {
-    // 1. Kiểm tra hoặc tạo container chứa các thông báo
     let container = document.querySelector('.toast-container');
     if (!container) {
         container = document.createElement('div');
@@ -2333,11 +2347,9 @@ function hienThiThongBaoMoi(data) {
         document.body.appendChild(container);
     }
 
-    // 2. Tạo phần tử thông báo mới
     let toast = document.createElement('div');
     toast.className = 'toast-notification';
     
-    // Format nội dung thông báo ngắn gọn, thu hút
     toast.innerHTML = `
         <span style="font-size: 20px;">📅</span>
         <div style="flex-grow: 1;">
@@ -2347,13 +2359,41 @@ function hienThiThongBaoMoi(data) {
         </div>
     `;
 
-    // 3. Thêm vào màn hình
     container.appendChild(toast);
 
-    // 4. Tự động xóa khỏi DOM sau khi hiệu ứng fadeOut hoàn tất (5 giây)
     setTimeout(() => {
         toast.remove();
     }, 5000);
+}
+
+// 1. THÊM HÀM NÀY VÀO TRONG THẺ SCRIPT CỦA BẠN (Để riêng lẻ ở ngoài)
+function highlightLanhDao(text) {
+    if (!text) return 'Không có';
+    
+    // Danh sách các Lãnh đạo cần làm nổi bật
+    let leaders = ["D/C Hồng Trưởng TCS", "D/C Tuyến Phó Trưởng TCS", "D/C Hiệp Phó Trưởng TCS"];
+    let result = text;
+    
+    leaders.forEach(ld => {
+        // Thay thế tên Lãnh đạo bằng một thẻ span có màu vàng/đỏ nổi bật
+        let regex = new RegExp(ld, "gi"); // 'gi' để không phân biệt hoa thường
+        result = result.replace(regex, `<span style="background-color: #fff3cd; color: #856404; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #ffeeba; display: inline-block; margin: 2px 0;">${ld}</span>`);
+    });
+    
+    return result;
+}
+
+// Hàm đóng Modal chi tiết
+function dongModalChiTiet() {
+    document.getElementById('modalChiTietHop').style.display = 'none';
+}
+
+// Xử lý đóng modal khi click ra ngoài nền đen (Bổ sung vào event có sẵn nếu bạn đã có hàm window.onclick)
+window.onclick = function(event) {
+    let modalDatLich = document.getElementById('modalDatLichHop');
+    let modalChiTiet = document.getElementById('modalChiTietHop');
+    if (event.target === modalDatLich) dongModalDatLich();
+    if (event.target === modalChiTiet) dongModalChiTiet();
 }
 
 
@@ -2373,10 +2413,28 @@ function hienThiThongBaoMoi(data) {
 
 
 
-
-
-
-
 </script>
+<div id="modalChiTietHop" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(2px);">
+    <div style="background-color: #ffffff; margin: 10% auto; padding: 25px; border-radius: 10px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); font-family: Arial, sans-serif;">
+        
+        <span onclick="dongModalChiTiet()" style="color: #888; float: right; font-size: 28px; font-weight: bold; cursor: pointer; margin-top: -10px;">&times;</span>
+        
+        <h3 id="ct_tenCuocHop" style="margin-top: 0; color: #0056b3; border-bottom: 2px solid #e9ecef; padding-bottom: 15px; font-size: 20px;">📌 Chi tiết cuộc họp</h3>
+        
+        <div style="line-height: 1.8; font-size: 15px; color: #333;">
+            <p style="margin: 8px 0;">🏢 <b>Phòng:</b> <span id="ct_phongHop"></span></p>
+            <p style="margin: 8px 0;">🕒 <b>Thời gian:</b> <span id="ct_thoiGian" style="color: #d81b60; font-weight: bold;"></span></p>
+            <p style="margin: 8px 0;">👤 <b>Chủ trì:</b> <span id="ct_chuTri"></span></p>
+            <p style="margin: 8px 0;">👥 <b>Thành phần:</b> <span id="ct_thanhPhan" style="display: block; margin-top: 5px; padding: 10px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;"></span></p>
+            <p style="margin: 8px 0;">📝 <b>Nội dung:</b> <span id="ct_noiDung" style="white-space: pre-wrap;"></span></p>
+        </div>
+
+        <div id="khuVucXoaLich" style="margin-top: 25px; border-top: 1px dashed #ccc; padding-top: 15px; display: none; text-align: center; background: #fff5f5; border-radius: 8px; padding-bottom: 15px;">
+            <p style="color: #dc3545; font-size: 14px; font-weight: bold; margin-bottom: 12px;">👉 Bạn là người tạo lịch này. Bạn có muốn XÓA nó không?</p>
+            <button id="btnXacNhanXoaModal" style="background-color: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-right: 10px; box-shadow: 0 2px 4px rgba(220,53,69,0.3);">🗑️ Vâng, Xóa Lịch Này</button>
+            <button onclick="dongModalChiTiet()" style="background-color: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;">❌ Hủy bỏ</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
