@@ -2048,7 +2048,7 @@ function initCalendar() {
                         
                         detailsDiv.innerHTML = `
                             <div style="margin-bottom: 4px;">👤 <b>Chủ trì:</b> ${p.nguoiChuTri || 'Chưa rõ'}</div>
-                            <div style="margin-bottom: 4px;">👥 <b>Thành phần:</b> ${dsThamDu}</div>
+                            <div style="margin-bottom: 4px;">👥 <b>Phòng ban:</b> ${dsThamDu}</div>
                             <div style="white-space: pre-wrap; word-break: break-word; margin-bottom: 4px;">📝 <b>Nội dung:</b> ${p.noiDung || 'Không có'}</div>
                             ${nutXoaHtml}
                         `;
@@ -2062,7 +2062,7 @@ function initCalendar() {
         eventClick: function(info) {
             let p = info.event.extendedProps;
             let dsThamDu = (p.thanhPhan && p.thanhPhan.length > 0) ? p.thanhPhan.join(', ') : 'Không có';
-            let detailText = `📌 Họp: ${p.tenCuocHop}\n🏢 Phòng: ${p.phongHop}\n👤 Chủ trì: ${p.nguoiChuTri}\n👥 Thành phần: ${dsThamDu}\n📝 Nội dung: ${p.noiDung || 'Không có'}`;
+            let detailText = `📌 Họp: ${p.tenCuocHop}\n🏢 Phòng: ${p.phongHop}\n👤 Chủ trì: ${p.nguoiChuTri}\n👥 Phòng ban: ${dsThamDu}\n📝 Nội dung: ${p.noiDung || 'Không có'}`;
             
             // Nếu là admin, click vào sẽ cho phép lựa chọn Xóa cuộc họp
             if (typeof isAdmin !== 'undefined' && isAdmin) {
