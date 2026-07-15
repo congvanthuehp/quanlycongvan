@@ -700,6 +700,48 @@ html, body {
         transform: translateY(-20px);
     }
 }
+
+/* Thiết lập cho nút chứa badge định vị chuẩn xác */
+#btnChuyenLich {
+    position: relative !important;
+}
+
+/* Kiểu dáng chấm đỏ thông báo */
+.badge-thong-bao {
+    position: absolute;
+    top: -6px;            /* Nổi lên trên góc phải nút */
+    right: -6px;
+    background-color: #dc3545; /* Màu đỏ cảnh báo */
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 8px rgba(220, 53, 69, 0.6);
+    border: 2px solid #ffffff;
+    z-index: 10;
+    animation: nhipTim 1.5s infinite; /* Hiệu ứng nhấp nháy thu hút */
+}
+
+/* Hiệu ứng nhịp tim nhấp nháy */
+@keyframes nhipTim {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+    70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 6px rgba(220, 53, 69, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
     </style>
 </head>
 <body>
@@ -836,7 +878,9 @@ html, body {
         </div>
 
         <div style="margin-top: 15px;">
+
             <button id="btnChuyenLich" onclick="toggleChucNang('LICH')" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">📅 Xem Lịch Họp</button>
+
             <button id="btnChuyenCongVan" onclick="toggleChucNang('CONGVAN')" style="background: #28a745; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; display: none;">📝 Quản Lý Công Văn</button>
         </div>
 
@@ -2397,7 +2441,64 @@ window.onclick = function(event) {
 }
 
 
+document.addEventListener("DOMContentLoaded", function() {
+    
+    // 1. Cập nhật giao diện hiển thị Badge dựa trên số lượng lưu trữ
+    function capNhatBadgeGiaoDien() {
+        let btn = document.getElementById('btnChuyenLich'); // Đã đổi thành btnChuyenLich
+        if (!btn) return;
 
+        let counts = parseInt(localStorage.getItem('so_lich_moi_chua_xem') || '0');
+        let currentBadge = document.getElementById('badgeLichHop');
+
+        if (counts > 0) {
+            // Nếu chưa có badge thì tạo mới
+            if (!currentBadge) {
+                currentBadge = document.createElement('span');
+                currentBadge.id = 'badgeLichHop';
+                currentBadge.className = 'badge-thong-bao';
+                btn.appendChild(currentBadge);
+            }
+            // Gán số lượng cuộc họp mới chưa xem vào badge
+            currentBadge.innerText = counts;
+        } else {
+            // Nếu bằng 0 thì ẩn/xóa đi
+            if (currentBadge) currentBadge.remove();
+        }
+    }
+
+    // 2. Click vào nút -> Reset số thông báo về 0
+    let btnXemLich = document.getElementById('btnChuyenLich'); // Đã đổi thành btnChuyenLich
+    if (btnXemLich) {
+        btnXemLich.addEventListener('click', function() {
+            localStorage.setItem('so_lich_moi_chua_xem', '0'); // Reset về 0
+            capNhatBadgeGiaoDien();
+        });
+    }
+
+    // Khởi chạy kiểm tra badge ngay khi vừa load trang
+    capNhatBadgeGiaoDien();
+
+    // 3. LẮNG NGHE FIREBASE REALTIME ĐỂ ĐẾM SỰ KIỆN MỚI
+    let duLieuBanDauDaTaiXong = false;
+
+    // Chờ lấy hết dữ liệu cũ ban đầu trên Firebase
+    db.ref('lich_hop').once('value').then(() => {
+        duLieuBanDauDaTaiXong = true;
+    });
+
+    // Bắt đầu lắng nghe khi có bản ghi mới được tạo thêm
+    db.ref('lich_hop').on('child_added', (snapshot) => {
+        if (duLieuBanDauDaTaiXong) {
+            // Cộng dồn thêm 1 thông báo mới vào localStorage
+            let currentCounts = parseInt(localStorage.getItem('so_lich_moi_chua_xem') || '0');
+            localStorage.setItem('so_lich_moi_chua_xem', currentCounts + 1);
+
+            // Cập nhật lên nút bấm ngay lập tức
+            capNhatBadgeGiaoDien();
+        }
+    });
+});
 
 
 
