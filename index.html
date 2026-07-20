@@ -754,118 +754,119 @@ html, body {
         <p id="loginError" style="color: red; display: none; font-size: 14px; font-weight: bold; margin-top: 10px;">Sai tài khoản hoặc mật khẩu!</p>
     </div>
 
-    <!-- 2. GIAO DIỆN LỊCH (Đã giải phóng không gian chiếm 100% chiều ngang) -->
-<div id="calendarApp" style="display: none; padding: 20px; background: #f4f7f6; min-height: 100vh;">
-    
-    <div style="margin-bottom: 15px; text-align: left; display: flex; gap: 10px;">
-        <button onclick="toggleChucNang('CONGVAN')" style="background: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            ⬅ Quay lại Công Văn
-        </button>
-        <!-- NÚT MEETING MỚI ĐỂ BẬT FORM ĐẶT LỊCH -->
-        <button id="btnMeetingAdmin" onclick="moModalDatLich()" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            📅 Meeting
-        </button>
-    </div>
-<div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
-    <label style="font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-        <input type="checkbox" id="btnLocLanhDao" onchange="calendar.refetchEvents()" style="width: 18px; height: 18px;">
-        Chỉ hiển thị lịch họp của Trưởng / Phó TCS
-    </label>
-</div>
-    <div class="calendar-layout" style="display: block; width: 100%;">
-        <div class="calendar-main" style="width: 100%;">
-            <div id='calendar'></div>
+    <!-- 2. GIAO DIỆN LỊCH -->
+    <div id="calendarApp" style="display: none; padding: 20px; background: #f4f7f6; min-height: 100vh;">
+        <div style="margin-bottom: 15px; text-align: left; display: flex; gap: 10px;">
+            <button onclick="toggleChucNang('CONGVAN')" style="background: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                ⬅ Quay lại Công Văn
+            </button>
+            <!-- NÚT MEETING MỚI ĐỂ BẬT FORM ĐẶT LỊCH -->
+            <button id="btnMeetingAdmin" onclick="moModalDatLich()" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                📅 Meeting
+            </button>
         </div>
-    </div>
-    
-    <!-- Nút bấm nổi nhanh dưới góc màn hình cho Mobile -->
-    <button class="floating-add-btn" id="btnMoFormMobile" onclick="moModalDatLich()">+</button>
-</div>
-
-<!-- 3. KHỐI MODAL ĐẶT LỊCH HỌP MỚI (TÁCH BIỆT HOÀN TOÀN) -->
-<div id="modalDatLichHop" class="modal" style="display: none;" onclick="dongModalDatLichNgoai(event)">
-    <div class="modal-content" style="max-width: 750px; margin: 3% auto;">
-        <span class="close-btn" onclick="dongModalDatLich()">&times;</span>
-        
-        <div class="form-header">
-            <h3 style="margin: 0; font-size: 18px; color: #333; font-weight: bold;">📅 Đặt lịch họp mới</h3>
+        <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+            <label style="font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="btnLocLanhDao" onchange="calendar.refetchEvents()" style="width: 18px; height: 18px;">
+                Chỉ hiển thị lịch họp của Trưởng / Phó TCS
+            </label>
         </div>
-        
-        <div style="margin-top: 15px;">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Tên cuộc họp <span style="color: red;">*</span></label>
-                    <input type="text" id="tenCuocHop" class="form-control" placeholder="Ví dụ: Họp phòng ban...">
-                </div>
-                <div class="form-group">
-                    <label>Loại cuộc họp</label>
-                    <select id="loaiCuocHop" class="form-control">
-                        <option value="#28a745">Họp thường kỳ (Xanh lá)</option>
-                        <option value="#fd7e14">Họp đột xuất (Cam)</option>
-                        <option value="#6f42c1">Họp Ban Giám Đốc (Tím)</option>
-                        <option value="#007bff">Họp Dự án (Xanh dương)</option>
-                    </select>
-                </div>
+        <div class="calendar-layout" style="display: block; width: 100%;">
+            <div class="calendar-main" style="width: 100%;">
+                <div id='calendar'></div>
             </div>
+        </div>
+        <!-- Nút bấm nổi nhanh dưới góc màn hình cho Mobile -->
+        <button class="floating-add-btn" id="btnMoFormMobile" onclick="moModalDatLich()">+</button>
+    </div>
 
-            <div class="form-grid" style="margin-top: 10px;">
-                <div class="form-group">
-                    <label>Người chủ trì <span style="color: red;">*</span></label>
-                    <input type="text" id="nguoiChuTri" class="form-control" readonly>
-                </div>
-                <div class="form-group">
-                    <label>Phòng họp <span style="color: red;">*</span></label>
-                    <select id="phongHop" class="form-control">
-                        <option value="Phòng Họp Lớn">Phòng Họp Lớn</option>
-                        <option value="Phòng Họp Nhỏ">Phòng Họp Nhỏ</option>
-                        <option value="Trực tuyến">Trực tuyến</option>
-                    </select>
-                </div>
+    <!-- 3. KHỐI MODAL ĐẶT LỊCH HỌP MỚI -->
+    <div id="modalDatLichHop" class="modal" style="display: none;" onclick="dongModalDatLichNgoai(event)">
+        <div class="modal-content" style="max-width: 750px; margin: 3% auto;">
+            <span class="close-btn" onclick="dongModalDatLich()">&times;</span>
+            <div class="form-header">
+                <h3 style="margin: 0; font-size: 18px; color: #333; font-weight: bold;">📅 Đặt lịch họp mới</h3>
             </div>
-
-            <div class="row-3" style="margin-top: 10px;">
-                <div class="form-group">
-                    <label>Ngày họp <span style="color: red;">*</span></label>
-                    <input type="date" id="ngayHop" class="form-control">
+            <div style="margin-top: 15px;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Tên cuộc họp <span style="color: red;">*</span></label>
+                        <input type="text" id="tenCuocHop" class="form-control" placeholder="Ví dụ: Họp phòng ban...">
+                    </div>
+                    <div class="form-group">
+                        <label>Loại cuộc họp</label>
+                        <select id="loaiCuocHop" class="form-control">
+                            <option value="#28a745">Họp thường kỳ (Xanh lá)</option>
+                            <option value="#fd7e14">Họp đột xuất (Cam)</option>
+                            <option value="#6f42c1">Họp Ban Giám Đốc (Tím)</option>
+                            <option value="#007bff">Họp Dự án (Xanh dương)</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Giờ bắt đầu <span style="color: red;">*</span></label>
-                    <input type="time" id="gioBatDau" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label>Giờ kết thúc <span style="color: red;">*</span></label>
-                    <input type="time" id="gioKetThuc" class="form-control">
-                </div>
-            </div>
 
-            <div class="form-group" style="margin-top: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                    <label style="margin: 0;">Thành phần tham dự</label>
-                    <label style="cursor: pointer; font-size: 13px; font-weight: bold; color: #007bff;">
-                        <input type="checkbox" id="checkAllThamDu" onchange="chonTatCaThamDu(this)"> Chọn tất cả
-                    </label>
+                <div class="form-grid" style="margin-top: 10px;">
+                    <div class="form-group">
+                        <label>Người chủ trì <span style="color: red;">*</span></label>
+                        <input type="text" id="nguoiChuTri" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Phòng họp <span style="color: red;">*</span></label>
+                        <select id="phongHop" class="form-control">
+                            <option value="Phòng Họp Lớn">Phòng Họp Lớn</option>
+                            <option value="Phòng Họp Nhỏ">Phòng Họp Nhỏ</option>
+                            <option value="Trực tuyến">Trực tuyến</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="checkbox-grid" id="danhSachThamDuGrid" style="border: 1px solid #ddd; padding: 10px; border-radius: 4px; max-height: 120px; overflow-y: auto; background: #fff;"></div>
-            </div>
 
-            <div class="form-group" style="margin-top: 10px;">
-                <label>Nội dung cuộc họp</label>
-                <textarea id="noiDungHop" class="form-control" rows="3" placeholder="Nhập nội dung chi tiết..."></textarea>
-            </div>
+                <div class="row-3" style="margin-top: 10px;">
+                    <div class="form-group">
+                        <label>Ngày họp <span style="color: red;">*</span></label>
+                        <input type="date" id="ngayHop" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Giờ bắt đầu <span style="color: red;">*</span></label>
+                        <input type="time" id="gioBatDau" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Giờ kết thúc <span style="color: red;">*</span></label>
+                        <input type="time" id="gioKetThuc" class="form-control">
+                    </div>
+                </div>
 
-            <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" class="btn-cancel" style="max-width: 120px;" onclick="dongModalDatLich()">Hủy bỏ</button>
-                <button type="button" class="btn-submit" style="max-width: 180px;" onclick="luuLichHop()">Lưu lịch họp</button>
+                <div class="form-group" style="margin-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <label style="margin: 0;">Thành phần tham dự</label>
+                        <label style="cursor: pointer; font-size: 13px; font-weight: bold; color: #007bff;">
+                            <input type="checkbox" id="checkAllThamDu" onchange="chonTatCaThamDu(this)"> Chọn tất cả
+                        </label>
+                    </div>
+                    <div class="checkbox-grid" id="danhSachThamDuGrid" style="border: 1px solid #ddd; padding: 10px; border-radius: 4px; max-height: 120px; overflow-y: auto; background: #fff;"></div>
+                </div>
+
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>Nội dung cuộc họp</label>
+                    <textarea id="noiDungHop" class="form-control" rows="3" placeholder="Nhập nội dung chi tiết..."></textarea>
+                </div>
+
+                <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn-cancel" style="max-width: 120px;" onclick="dongModalDatLich()">Hủy bỏ</button>
+                    <button type="button" class="btn-submit" style="max-width: 180px;" onclick="luuLichHop()">Lưu lịch họp</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
+    <!-- 4. GIAO DIỆN CHÍNH QUẢN LÝ CÔNG VĂN -->
     <div class="container" id="mainApp">
-        <div class="header-top" style="padding: 10px 15px; background: #eee; border-bottom: 2px solid #ccc;">
+        <div class="header-top" style="padding: 10px 15px; background: #eee; border-bottom: 2px solid #ccc; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span id="userInfo" style="font-weight: bold; color: #0056b3; text-transform: uppercase;">Xin chào: </span>
-                <button id="btnGuiThongBaoAdmin" style="display:none; background:#ff9800; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight: bold;" onclick="moFormThongBao()">📢 GỬI THÔNG BÁO</button>
+                
+                <!-- ĐÃ ĐƯA NÚT PHÁT THÔNG BÁO VÀO ĐÂY, NGAY TRÊN HEADER ĐỂ DỄ NHÌN THẤY NHẤT -->
+                <button id="btnGuiThongBaoAdmin" onclick="moFormThongBao()" style="display: none; background: #ff9800; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+                    📢 Phát thông báo
+                </button>
             </div>
 
             <div style="display: flex; align-items: center; gap: 15px;">
@@ -878,9 +879,7 @@ html, body {
         </div>
 
         <div style="margin-top: 15px;">
-
             <button id="btnChuyenLich" onclick="toggleChucNang('LICH')" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">📅 Xem Lịch Họp</button>
-
             <button id="btnChuyenCongVan" onclick="toggleChucNang('CONGVAN')" style="background: #28a745; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; display: none;">📝 Quản Lý Công Văn</button>
         </div>
 
@@ -965,11 +964,12 @@ html, body {
                     </tr>
                 </thead>
                 <tbody id="bangCongVan">
-                    </tbody>
+                </tbody>
             </table>
         </div>
     </div>
 
+    <!-- 5. CÁC MODAL HỆ THỐNG -->
     <div id="modalForm" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="dongForm()">&times;</span>
@@ -1024,6 +1024,7 @@ html, body {
         </div>
     </div>
 
+    <!-- Modal Form Nhập Thông Báo Mới (Của Admin) -->
     <div id="modalThongBao" class="modal-thongbao-list">
         <div class="modal-thongbao-content" style="max-width: 450px;">
             <div class="modal-header-tb" style="background-color: #ff9800; position: relative; padding: 15px;">
@@ -1038,6 +1039,7 @@ html, body {
         </div>
     </div>
 
+    <!-- Modal Xem Danh Sách Thông Báo (Của User) -->
     <div id="modalLichSuThongBao" class="modal-thongbao-list">
         <div class="modal-thongbao-content">
             <div class="modal-header-tb">
@@ -1045,12 +1047,13 @@ html, body {
                 <span style="cursor:pointer; font-weight:bold; font-size: 18px;" onclick="dongLichSuThongBao()">X</span>
             </div>
             <div class="modal-body-tb" id="danhSachThongBaoList">
-                </div>
+            </div>
         </div>
     </div>
 
     <div id="toastNotif" class="toast"></div>
 
+</body>
 </body>
 <script>
     const firebaseConfig = {
@@ -1127,18 +1130,18 @@ html, body {
                 document.getElementById('btnAdd').style.display = "block";
                 document.getElementById('btnExcel').style.display = "block"; 
                 
-                // ---> Bật nút Gửi Thông Báo cho Admin <---
-                if(document.getElementById('btnNotify')) {
-                    document.getElementById('btnNotify').style.display = "inline-block";
+                // SỬA Ở ĐÂY:
+                if(document.getElementById('btnGuiThongBaoAdmin')) {
+                    document.getElementById('btnGuiThongBaoAdmin').style.display = "inline-block";
                 }
             } else {
                 isAdmin = false;
                 document.getElementById('btnAdd').style.display = "none";
                 document.getElementById('btnExcel').style.display = "none";
                 
-                // ---> Ẩn nút Gửi Thông Báo với User phòng ban khác <---
-                if(document.getElementById('btnNotify')) {
-                    document.getElementById('btnNotify').style.display = "none";
+                // SỬA Ở ĐÂY:
+                if(document.getElementById('btnGuiThongBaoAdmin')) {
+                    document.getElementById('btnGuiThongBaoAdmin').style.display = "none";
                 }
             }
             
