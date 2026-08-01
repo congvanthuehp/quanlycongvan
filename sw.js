@@ -6,7 +6,7 @@
 // =====================================================================
 const CACHE_NAME = 'quanlycongvan-cache-v1';
 const APP_SHELL = [
-  './quanlycongvan.html',
+  './index.html',
   './app.js',
   './manifest.json',
   './icons/icon-192.png',

@@ -2,7 +2,7 @@
   "name": "Quản Lý Công Văn Nội Bộ",
   "short_name": "Công Văn",
   "description": "Ứng dụng quản lý công văn đến, hạn xử lý, lịch họp nội bộ.",
-  "start_url": "./quanlycongvan.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
