@@ -16,6 +16,10 @@
     <meta name="apple-mobile-web-app-title" content="Công Văn">
     <!-- =================================================================================== -->
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js" defer></script>
@@ -312,12 +316,9 @@
 
             /* Header: xếp gọn theo chiều dọc, không bị tràn/chồng chữ */
             .header-top { flex-direction: column; align-items: stretch !important; gap: 8px !important; }
-            .header-top > div { justify-content: space-between; width: 100%; }
+            .header-top > div { justify-content: flex-end; width: 100%; flex-wrap: wrap; }
+            .header-top > div:first-child { justify-content: space-between; }
             #userInfo { font-size: 13px; }
-
-            /* Action bar: các nút xếp full-width, dễ bấm bằng ngón tay */
-            .action-bar { flex-direction: column; align-items: stretch; }
-            .action-bar button { width: 100%; padding: 12px; font-size: 14px; }
 
             /* Tăng vùng chạm cho các nút chuyển chức năng / logout */
             #btnChuyenLich, #btnChuyenCongVan, .btn-logout, #btnGuiThongBaoAdmin {
@@ -787,6 +788,165 @@ html, body {
         box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
     }
 }
+/* ============================================================
+   NÂNG CẤP GIAO DIỆN — đồng bộ phong cách thiết kế với App Sổ Chi Tiêu
+   (card bo góc mềm, đổ bóng nhẹ, font Fraunces/Inter/Plex Mono)
+   ============================================================ */
+:root{
+  --bg:#F3F6F9;
+  --surface:#FFFFFF;
+  --surface-alt:#EAF0F7;
+  --ink:#16202B;
+  --ink-soft:#5B6875;
+  --ink-faint:#93A0AC;
+  --line:#DEE4EC;
+  --brand:#0056b3;
+  --brand-soft:#E3EEFB;
+  --warn:#C98A2C;
+  --warn-soft:#FBF0DD;
+  --danger:#B3452F;
+  --danger-soft:#FBE9E4;
+  --radius-lg:20px;
+  --radius-md:14px;
+  --radius-sm:10px;
+  --shadow:0 2px 14px rgba(22,32,43,0.07);
+  --shadow-lift:0 10px 28px rgba(22,32,43,0.16);
+}
+
+html, body { font-family:'Inter',Arial,sans-serif !important; }
+h2, .form-header h3, #formTitle, #loginScreen h2 { font-family:'Fraunces',serif !important; letter-spacing:0.01em; }
+.counter-num, .mono, td.mono, #ct_thoiGian { font-family:'IBM Plex Mono',monospace !important; }
+
+body { background:var(--bg) !important; }
+.container { background:transparent !important; box-shadow:none !important; padding:10px !important; }
+
+/* ===== Đăng nhập ===== */
+#loginScreen{
+  background:var(--surface) !important;
+  border-radius:var(--radius-lg) !important;
+  box-shadow:var(--shadow-lift) !important;
+  border-top:5px solid var(--brand) !important;
+  border-left:none; border-right:none; border-bottom:none;
+  max-width:380px !important;
+}
+#loginScreen input {
+  border-radius:var(--radius-sm) !important;
+  border:1.5px solid var(--line) !important;
+  padding:12px 14px !important;
+  background:var(--surface) !important;
+}
+#loginScreen input:focus { border-color:var(--brand) !important; outline:none; }
+#loginScreen button {
+  background:var(--ink) !important;
+  border-radius:var(--radius-sm) !important;
+  font-weight:600 !important;
+  transition:transform .15s ease;
+}
+#loginScreen button:active { transform:scale(0.98); }
+
+/* ===== Header ===== */
+.header-top {
+  background:var(--surface) !important;
+  border-radius:var(--radius-md) !important;
+  border-bottom:none !important;
+  box-shadow:var(--shadow) !important;
+}
+#userInfo { color:var(--brand) !important; }
+
+/* ===== Tiêu đề trang ===== */
+h2 { color:var(--ink) !important; }
+
+/* ===== Thẻ bộ đếm ===== */
+.counter-card {
+  background:var(--surface) !important;
+  border-radius:var(--radius-md) !important;
+  box-shadow:var(--shadow) !important;
+  border-left-width:4px !important;
+}
+.counter-card:hover { box-shadow:var(--shadow-lift) !important; }
+.counter-title { color:var(--ink-faint) !important; }
+.counter-num { color:var(--ink) !important; }
+
+/* ===== Bộ lọc nâng cao ===== */
+.advanced-filters {
+  background:var(--surface) !important;
+  border:1px solid var(--line) !important;
+  border-radius:var(--radius-md) !important;
+  box-shadow:var(--shadow) !important;
+}
+.filter-select, .date-range-group, #searchInput, #filterTuan, #filterTo {
+  border-radius:var(--radius-sm) !important;
+  border-color:var(--line) !important;
+}
+.filter-select:focus, #searchInput:focus { border-color:var(--brand) !important; }
+#btnToggleFilter { background:var(--brand) !important; border-radius:var(--radius-sm) !important; box-shadow:var(--shadow); }
+
+/* ===== Nút bấm hành động ===== */
+.btn-add { background:var(--brand) !important; border-radius:var(--radius-sm) !important; box-shadow:var(--shadow); }
+.btn-excel { background:#1B7A5B !important; border-radius:var(--radius-sm) !important; }
+.btn-export { background:#17a2b8 !important; border-radius:var(--radius-sm) !important; }
+.btn-logout { background:var(--surface-alt) !important; color:var(--ink-soft) !important; border-radius:var(--radius-sm) !important; font-weight:600 !important; }
+#btnChuyenLich, #btnChuyenCongVan, #btnGuiThongBaoAdmin, #btnMeetingAdmin { border-radius:var(--radius-sm) !important; box-shadow:var(--shadow); }
+button { border-radius:var(--radius-sm); }
+button:hover, .btn-add:hover, .btn-excel:hover { filter:brightness(1.06); }
+
+/* ===== Bảng công văn ===== */
+.table-container {
+  background:var(--surface) !important;
+  border-radius:var(--radius-md) !important;
+  border:1px solid var(--line) !important;
+  box-shadow:var(--shadow) !important;
+}
+th { background:var(--brand) !important; }
+.status-badge { border-radius:20px !important; padding:5px 10px !important; }
+tbody tr:hover { background-color:var(--brand-soft) !important; }
+
+/* ===== Modal (form công văn / thông báo / lịch họp) ===== */
+.modal-content {
+  border-radius:var(--radius-lg) !important;
+  box-shadow:var(--shadow-lift) !important;
+  border:none !important;
+}
+.btn-save { background:var(--brand) !important; border-radius:var(--radius-sm) !important; }
+.btn-luu { background:var(--brand) !important; border-radius:var(--radius-sm) !important; }
+.btn-huy, .btn-cancel { border-radius:var(--radius-sm) !important; }
+.form-grid input, .form-grid select, .form-grid textarea,
+.form-control { border-radius:var(--radius-sm) !important; border-color:var(--line) !important; }
+.form-grid input:focus, .form-grid select:focus, .form-grid textarea:focus,
+.form-control:focus { border-color:var(--brand) !important; }
+
+/* ===== Nút nổi thêm mới (mobile) ===== */
+.floating-add-btn {
+  background:var(--ink) !important;
+  box-shadow:var(--shadow-lift) !important;
+}
+.floating-add-btn:active { transform:scale(0.94); }
+
+/* ===== Thẻ thông báo / toast ===== */
+.tb-item.unread { background-color:var(--brand-soft) !important; border-left-color:var(--brand) !important; }
+.toast-notification { border-radius:var(--radius-md) !important; }
+/* ===== Nút icon cạnh chuông thông báo (Thêm CV / Nhập Excel / Xuất Excel) ===== */
+.btn-icon-header {
+    background: var(--surface-alt) !important;
+    color: var(--brand) !important;
+    border: none !important;
+    width: 38px; height: 38px;
+    border-radius: 50% !important;
+    font-size: 17px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0 !important;
+    cursor: pointer;
+    box-shadow: none !important;
+    transition: transform .15s ease, background-color .15s ease;
+}
+.btn-icon-header:hover { background: var(--brand-soft) !important; transform: translateY(-2px) !important; box-shadow: none !important; }
+.btn-icon-header:active { transform: scale(0.94) !important; }
+#btnExcel.btn-icon-header { color: #1B7A5B !important; }
+#btnExport.btn-icon-header { color: #17a2b8 !important; }
+
+@media (max-width: 768px) {
+    .btn-icon-header { width: 34px; height: 34px; font-size: 15px; }
+}
     </style>
 </head>
 <body>
@@ -914,8 +1074,12 @@ html, body {
                 </button>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
                 <span id="textCoThongBaoMoi" class="new-notif-text">📣 Có thông báo mới!</span>
+                <button class="btn-icon-header" id="btnAdd" onclick="moFormThemMoi()" title="Thêm công văn mới">➕</button>
+                <button class="btn-icon-header" id="btnExcel" onclick="document.getElementById('excelInput').click()" title="Nhập từ Excel">📥</button>
+                <button class="btn-icon-header" id="btnExport" onclick="exportExcel()" title="Xuất ra Excel">📤</button>
+                <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="importExcel(this)">
                 <button class="btn-bell" onclick="moLichSuThongBao()">
                     <span id="iconChuong">🔔</span> <span id="badgeThongBao" class="badge-notif">0</span>
                 </button>
@@ -978,13 +1142,6 @@ html, body {
             <input type="text" id="filterTuan" class="filter-select" placeholder="📆 Tuần BC (VD: Tuần 1)" oninput="hienThiBang()" style="width: 150px;">
             <input type="text" id="filterTo" class="filter-select" placeholder="👥 Tổ/Bộ phận" oninput="hienThiBang()" style="width: 170px;">
             <input type="text" id="searchInput" class="filter-select" placeholder="🔎 Tìm số, trích yếu..." oninput="hienThiBang()" style="flex: 1; min-width: 150px;">
-        </div>
-
-        <div class="action-bar">
-            <button class="btn-add" id="btnAdd" onclick="moFormThemMoi()">➕ THÊM CÔNG VĂN MỚI</button>
-            <button class="btn-excel" id="btnExcel" onclick="document.getElementById('excelInput').click()">📥 NHẬP TỪ EXCEL</button>
-            <button class="btn-export" id="btnExport" onclick="exportExcel()" style="background-color: #17a2b8; color: white; border: none; padding: 10px 15px; font-weight: bold; border-radius: 4px;">📤 XUẤT RA EXCEL</button>
-            <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="importExcel(this)">
         </div>
 
         <div class="table-container">
