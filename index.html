@@ -268,7 +268,7 @@
             #userInfo { font-size: 13px; }
 
             /* Tăng vùng chạm cho các nút chuyển chức năng / logout */
-            #btnChuyenLich, #btnChuyenCongVan, .btn-logout, #btnGuiThongBaoAdmin {
+            #btnChuyenLich, #btnChuyenCongVan, .btn-logout {
                 padding: 10px 14px !important; font-size: 13px !important;
             }
 
@@ -890,6 +890,17 @@ body { background:var(--bg) !important; }
   border-bottom:none !important;
   box-shadow:var(--shadow) !important;
 }
+/* Vạch phân cách mảnh giữa các nhóm nút trên header, giúp bố cục rõ ràng, bớt rối mắt */
+.header-divider {
+  width: 1px;
+  height: 26px;
+  background: var(--line);
+  margin: 0 6px;
+  flex-shrink: 0;
+}
+@media (max-width: 768px) {
+  .header-divider { display: none; }
+}
 #userInfo { color:var(--brand) !important; }
 
 /* ===== Tiêu đề trang ===== */
@@ -1276,8 +1287,8 @@ label { color: var(--ink); }
 
     <!-- 4. GIAO DIỆN CHÍNH QUẢN LÝ CÔNG VĂN -->
     <div class="container" id="mainApp">
-        <div class="header-top" style="padding: 10px 15px; background: #eee; border-bottom: 2px solid #ccc; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <div class="header-top" style="padding: 10px 15px; background: #eee; border-bottom: 2px solid #ccc; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                 <span id="userInfo" style="font-weight: bold; color: #0056b3; text-transform: uppercase;">Xin chào: </span>
 
                 <!-- ĐÃ ĐƯA NÚT PHÁT THÔNG BÁO VÀO ĐÂY, NGAY TRÊN HEADER ĐỂ DỄ NHÌN THẤY NHẤT -->
@@ -1285,16 +1296,26 @@ label { color: var(--ink); }
                 <button id="btnChuyenLich" onclick="toggleChucNang('LICH')" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">📅 Xem Lịch Họp</button>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                 <span id="textCoThongBaoMoi" class="new-notif-text">📣 Có thông báo mới!</span>
+
+                <!-- Nhóm 1: thao tác với dữ liệu công văn -->
                 <button class="btn-icon-header" id="btnAdd" onclick="moFormThemMoi()" title="Thêm công văn mới">➕</button>
                 <button class="btn-icon-header" id="btnExcel" onclick="document.getElementById('excelInput').click()" title="Nhập từ Excel">📥</button>
                 <button class="btn-icon-header" id="btnExport" onclick="exportExcel()" title="Xuất ra Excel">📤</button>
                 <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="importExcel(this)">
+
+                <span class="header-divider"></span>
+
+                <!-- Nhóm 2: thông báo & giao diện -->
                 <button class="btn-bell" onclick="moLichSuThongBao()">
                     <span id="iconChuong">🔔</span> <span id="badgeThongBao" class="badge-notif">0</span>
                 </button>
                 <button class="btn-theme-toggle" id="btnThemeToggle" onclick="toggleDarkMode()" title="Chuyển giao diện sáng/tối">🌙</button>
+
+                <span class="header-divider"></span>
+
+                <!-- Nhóm 3: đăng xuất -->
                 <button class="btn-logout" onclick="dangXuat()">Đăng xuất</button>
             </div>
         </div>
