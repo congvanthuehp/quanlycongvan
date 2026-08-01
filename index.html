@@ -103,32 +103,6 @@
         .tb-time { color: #888; font-size: 0.85em; float: right; }
         .tb-sender { font-weight: bold; color: #333; margin-bottom: 5px; }
         .tb-msg { margin: 0; white-space: pre-wrap; font-size: 0.95em; color: #444; }
-        
-     
-/* Giao diện thanh thông báo nổi (Toast) */
-.toast {
-    visibility: hidden; 
-    min-width: 300px; 
-    background-color: #ff9800; 
-    color: #fff;
-    text-align: center; 
-    border-radius: 8px; 
-    padding: 16px 20px; 
-    position: fixed;
-    z-index: 9999; 
-    left: 50%; 
-    top: 20px; /* Hiển thị ở trên cùng */
-    transform: translateX(-50%);
-    font-size: 16px; 
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.3);
-    font-weight: bold;
-}
-.toast.show { 
-    visibility: visible; 
-    animation: slideIn 0.5s, slideOut 0.5s 14.5s; 
-}
-@keyframes slideIn { from {top: -50px; opacity: 0;} to {top: 20px; opacity: 1;} }
-@keyframes slideOut { from {top: 20px; opacity: 1;} to {top: -50px; opacity: 0;} }
 
         @media (max-width: 768px) {
             /* Tối ưu lại nút Thêm mới khi đứng một mình */
@@ -137,66 +111,35 @@
                 justify-content: center !important;
             }
         }
-        /* 1. Cấu hình ban đầu cho các ô nhập liệu */
+        /* Ô nhập liệu trong form công văn: hiệu ứng nổi khi hover/focus, khóa hiệu ứng khi readonly */
         .form-grid input, .form-grid select, .form-grid textarea {
-            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1); /* Chuyển động mượt và tự nhiên hơn */
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
             outline: none;
-            position: relative; /* Bắt buộc phải có để kích hoạt z-index */
-            background-color: #fff;
+            position: relative;
+            background-color: var(--surface, #fff);
+            color: var(--ink, #16202B);
         }
-
-        /* 2. HIỆU ỨNG HOVER: Di chuột vào ô nào, ô đó NỔI HẲN LÊN */
-        .form-grid input:not([readonly]):hover, 
-        .form-grid select:hover, 
+        .form-grid input:not([readonly]):hover,
+        .form-grid select:hover,
         .form-grid textarea:hover {
-            border-color: #007bff;
-            transform: translateY(-4px) scale(1.01); /* Nhấc ô lên cao 4px và phóng to nhẹ 1% */
-            box-shadow: 0 10px 20px rgba(0, 123, 255, 0.25); /* Đổ bóng sâu phía dưới tạo cảm giác ô đang bay lên */
-            z-index: 99; /* Đảm bảo ô đang chọn luôn nằm trên cùng, không bị các ô khác che mất bóng */
-        }
-
-        /* 3. HIỆU ỨNG FOCUS: Khi nhấp chuột vào để gõ chữ */
-        .form-grid input:not([readonly]):focus, 
-        .form-grid select:focus, 
-        .form-grid textarea:focus {
-            border-color: #0056b3;
-            transform: translateY(-2px) scale(1.01); /* Giữ độ nổi nhẹ khi đang gõ */
-            box-shadow: 0 6px 12px rgba(0, 86, 179, 0.3);
-            background-color: #f4faff; /* Đổi nền sang xanh nhạt */
+            border-color: var(--brand, #007bff);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 86, 179, 0.14);
             z-index: 99;
         }
-
-        /* 4. Khóa hiệu ứng đối với các ô Chỉ đọc (Readonly) của hệ thống */
+        .form-grid input:not([readonly]):focus,
+        .form-grid select:focus,
+        .form-grid textarea:focus {
+            border-color: var(--brand, #0056b3);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(0, 86, 179, 0.22);
+            z-index: 99;
+        }
         .form-grid input[readonly]:hover, .form-grid input[readonly]:focus {
             transform: none;
             box-shadow: none;
-            border-color: #ccc;
-            background-color: #e9ecef;
-        }
-        /* Hiệu ứng khi di chuột (hover) và nhấp vào (focus) các ô nhập liệu */
-        .form-grid input, .form-grid select, .form-grid textarea {
-            transition: all 0.3s ease; /* Làm mượt chuyển động */
-            outline: none; /* Bỏ viền mặc định xấu của trình duyệt */
-        }
-
-        /* Khi di chuột qua */
-        .form-grid input:hover, .form-grid select:hover, .form-grid textarea:hover {
-            border-color: #007bff; /* Đổi viền sang màu xanh */
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3); /* Tỏa bóng mờ màu xanh xung quanh */
-        }
-
-        /* Khi nhấp chuột vào để gõ chữ */
-        .form-grid input:focus, .form-grid select:focus, .form-grid textarea:focus {
-            border-color: #0056b3; /* Viền xanh đậm hơn */
-            box-shadow: 0 0 8px rgba(0, 123, 255, 0.5); /* Bóng rõ hơn */
-            background-color: #f4faff; /* Đổi nền sang màu xanh cực nhạt cho dễ nhìn */
-        }
-
-        /* Avalon loại trừ hiệu ứng cho các ô tự động (chỉ đọc) để người dùng không nhầm lẫn */
-        .form-grid input[readonly]:hover, .form-grid input[readonly]:focus {
-            border-color: #ccc;
-            box-shadow: none;
-            background-color: #e9ecef;
+            border-color: var(--line, #ccc);
+            background-color: var(--surface-alt, #e9ecef);
         }
         body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; height: 100vh; height: 100dvh; box-sizing: border-box; overflow: hidden; }
         
@@ -243,7 +186,7 @@
         .full-width { grid-column: 1 / -1; }
         label { font-weight: bold; margin-bottom: 4px; font-size: 13px; color: #333;}
         input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-        #soNgayCon, #canhBao { background-color: #e9ecef; font-weight: bold; pointer-events: none;}
+        #soNgayCon, #canhBao { background-color: var(--surface-alt, #e9ecef); color: var(--ink, #16202B); font-weight: bold; pointer-events: none;}
         .btn-save { background-color: #28a745; color: white; border: none; padding: 12px 24px; cursor: pointer; border-radius: 4px; font-size: 16px; font-weight: bold; width: 100%; }
 
         /* ========================================= */
@@ -255,9 +198,13 @@
             border: 1px solid #ddd; 
             position: relative;
         }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1550px; }
-        table, th, td { border: 1px solid #ddd; }
-        th, td { padding: 8px 10px; text-align: left; font-size: 13px; }
+        /* Lưu ý: chỉ áp dụng cho bảng công văn (.table-container table) - trước đây
+           dùng selector "table" trần không giới hạn phạm vi, vô tình ép cả các bảng
+           nội bộ của FullCalendar (lịch tháng) phải rộng tối thiểu 1550px, khiến
+           lịch tháng bị tràn ngang trên điện thoại dù đã có CSS responsive riêng. */
+        .table-container table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1550px; }
+        .table-container table, .table-container th, .table-container td { border: 1px solid #ddd; }
+        .table-container th, .table-container td { padding: 8px 10px; text-align: left; font-size: 13px; }
         
         /* Cố định dòng tiêu đề chạy dọc */
         th { 
@@ -642,31 +589,30 @@ html, body {
     }
 }
 @media (max-width: 768px) {
-    /* 1. KHUNG CHỨA LỊCH: Cho phép xuất hiện thanh cuộn ngang */
+    /* 1. KHUNG CHỨA LỊCH: KHÔNG cuộn ngang cho lịch Tháng - co giãn khít màn hình
+       để luôn thấy đủ 7 cột Thứ 2 -> Chủ Nhật (trước đây bị ép cuộn ngang, mất cột) */
     .fc-view-harness {
-        overflow-x: auto !important; /* Kích hoạt cuộn ngang */
+        overflow-x: hidden !important;
         overflow-y: hidden !important;
-        -webkit-overflow-scrolling: touch; /* Cuộn mượt mà trên iOS/iPhone */
         width: 100% !important;
         max-width: 100% !important;
     }
 
-    /* 2. CHẾ ĐỘ XEM THÁNG (Grid) & TUẦN: 
-       Ép bảng rộng tối thiểu 750px để các cột Thứ 2 -> Chủ Nhật có đủ không gian hiển thị */
-    .fc-dayGridMonth-view,
-    .fc-timeGridWeek-view {
-        min-width: 750px !important; /* Đảm bảo mỗi ô ngày rộng rãi, dễ nhìn */
-    }
-
-    /* Đảm bảo các thành phần bảng bên trong giãn theo độ rộng này */
-    .fc-dayGridMonth-view .fc-scrollgrid,
-    .fc-dayGridMonth-view .fc-col-header,
-    .fc-timeGridWeek-view .fc-scrollgrid,
-    .fc-timeGridWeek-view .fc-col-header {
+    /* 2. CHẾ ĐỘ XEM THÁNG (Grid): co giãn khít 100% màn hình thay vì ép rộng tối thiểu 750px
+       (ép rộng khiến các cột cuối bị đẩy ra ngoài màn hình, phải cuộn ngang mới xem hết) */
+    .fc-dayGridMonth-view {
+        min-width: 100% !important;
         width: 100% !important;
     }
+    .fc-dayGridMonth-view .fc-scrollgrid,
+    .fc-dayGridMonth-view .fc-col-header,
+    .fc-dayGridMonth-view .fc-daygrid-body,
+    .fc-dayGridMonth-view .fc-daygrid-body table {
+        width: 100% !important;
+        table-layout: fixed !important;
+    }
 
-    /* 3. CHẾ ĐỘ XEM DANH SÁCH (List View): 
+    /* 3. CHẾ ĐỘ XEM DANH SÁCH (List View):
        Giữ nguyên 100% chiều rộng màn hình, KHÔNG cuộn ngang để cuộn dọc tối ưu */
     .fc-listMonth-view {
         min-width: 100% !important;
@@ -695,6 +641,39 @@ html, body {
     font-weight: 500 !important;
     font-size: 14px !important;
 }
+
+/* ==========================================================
+   BỐ CỤC LẠI HÀNG SỰ KIỆN TRONG "DANH SÁCH LỊCH HỌP" (List View):
+   xếp mỗi sự kiện thành 1 cột dọc thay vì 3 cột ngang mặc định của
+   FullCalendar (giờ | chấm màu | nội dung) — giờ họp nằm trên đầu,
+   toàn bộ nội dung (tên cuộc họp + chi tiết) sát lề trái, không bị
+   đẩy sang phải bởi độ rộng cột giờ.
+   ========================================================== */
+.fc-list-table tbody tr.fc-list-event {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+}
+.fc-list-table tbody tr.fc-list-event td {
+    display: block !important;
+    width: 100% !important;
+    text-align: left !important;
+}
+.fc-list-table tbody tr.fc-list-event td.fc-list-event-graphic {
+    display: none !important; /* chấm màu không cần thiết - màu đã thể hiện qua viền trái của phần chi tiết */
+}
+.fc-list-event-time {
+    order: -1;
+    font-weight: 700 !important;
+    color: var(--brand) !important;
+    font-size: 13px !important;
+    padding: 10px 14px 2px !important;
+    white-space: normal !important;
+}
+.fc-list-event-title {
+    padding: 0 14px 12px !important;
+}
+
 /* ==========================================
    CSS CHO TOAST NOTIFICATION (THÔNG BÁO ĐẨY)
    ========================================== */
@@ -806,12 +785,72 @@ html, body {
   --warn-soft:#FBF0DD;
   --danger:#B3452F;
   --danger-soft:#FBE9E4;
+  --success:#1B7A5B;
+  --success-soft:#E1F3EC;
   --radius-lg:20px;
   --radius-md:14px;
   --radius-sm:10px;
   --shadow:0 2px 14px rgba(22,32,43,0.07);
   --shadow-lift:0 10px 28px rgba(22,32,43,0.16);
 }
+
+/* ===== Chế độ tối (Dark mode) =====
+   Mặc định theo cài đặt hệ thống (prefers-color-scheme); nút bật/tắt thủ công
+   trên header ghi đè bằng data-theme trên <html> và lưu lựa chọn vào localStorage. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#12161C;
+    --surface:#1B2028;
+    --surface-alt:#242A34;
+    --ink:#E8ECF1;
+    --ink-soft:#A9B3BE;
+    --ink-faint:#748094;
+    --line:#333B47;
+    --brand:#4C8DFF;
+    --brand-soft:rgba(76,141,255,0.16);
+    --warn:#E3A73A;
+    --warn-soft:rgba(227,167,58,0.16);
+    --danger:#E2695A;
+    --danger-soft:rgba(226,105,90,0.16);
+    --success:#3FBE8E;
+    --success-soft:rgba(63,190,142,0.16);
+    --shadow:0 2px 14px rgba(0,0,0,0.35);
+    --shadow-lift:0 10px 28px rgba(0,0,0,0.5);
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#12161C;
+  --surface:#1B2028;
+  --surface-alt:#242A34;
+  --ink:#E8ECF1;
+  --ink-soft:#A9B3BE;
+  --ink-faint:#748094;
+  --line:#333B47;
+  --brand:#4C8DFF;
+  --brand-soft:rgba(76,141,255,0.16);
+  --warn:#E3A73A;
+  --warn-soft:rgba(227,167,58,0.16);
+  --danger:#E2695A;
+  --danger-soft:rgba(226,105,90,0.16);
+  --success:#3FBE8E;
+  --success-soft:rgba(63,190,142,0.16);
+  --shadow:0 2px 14px rgba(0,0,0,0.35);
+  --shadow-lift:0 10px 28px rgba(0,0,0,0.5);
+}
+
+.btn-theme-toggle {
+  background: var(--surface-alt);
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  font-size: 16px;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: transform .15s ease, background-color .15s ease;
+}
+.btn-theme-toggle:hover { background: var(--brand-soft); transform: translateY(-2px); }
+.btn-theme-toggle:active { transform: scale(0.94); }
 
 html, body { font-family:'Inter',Arial,sans-serif !important; }
 h2, .form-header h3, #formTitle, #loginScreen h2 { font-family:'Fraunces',serif !important; letter-spacing:0.01em; }
@@ -944,6 +983,10 @@ tbody tr:hover { background-color:var(--brand-soft) !important; }
 #btnExcel.btn-icon-header { color: #1B7A5B !important; }
 #btnExport.btn-icon-header { color: #17a2b8 !important; }
 
+/* Nút icon nền xanh đặc (VD: Phát thông báo) - cùng tông màu với nút Xem Lịch Họp */
+.btn-icon-header-solid { background: var(--brand) !important; color: #fff !important; }
+.btn-icon-header-solid:hover { background: var(--brand) !important; filter: brightness(1.12); box-shadow: var(--shadow) !important; }
+
 @media (max-width: 768px) {
     .btn-icon-header { width: 34px; height: 34px; font-size: 15px; }
 }
@@ -1051,16 +1094,76 @@ tbody tr:hover { background-color:var(--brand-soft) !important; }
 .fc-daygrid-day-number { color: var(--ink) !important; font-weight: 500; }
 .fc-event { border: none !important; border-radius: 6px !important; font-weight: 500; }
 .fc-list-event:hover td { background: var(--brand-soft) !important; }
+
+/* ============================================================
+   THÍCH ỨNG CHUNG CHO CHẾ ĐỘ TỐI (áp dụng cho phần tử chưa dùng biến CSS)
+   ============================================================ */
+body { color: var(--ink); }
+input, select, textarea { background-color: var(--surface); color: var(--ink); border-color: var(--line); }
+.modal-content { background-color: var(--surface); color: var(--ink); }
+.modal-thongbao-content { background-color: var(--surface); color: var(--ink); }
+.modal-body-tb { background: var(--bg) !important; }
+.tb-item { background: var(--surface) !important; color: var(--ink); border-color: var(--line) !important; }
+.tb-sender { color: var(--ink) !important; }
+.tb-msg { color: var(--ink-soft) !important; }
+label { color: var(--ink); }
+.form-header h3 { color: var(--ink) !important; }
+#danhSachLichSu { background: var(--surface-alt) !important; border-color: var(--line) !important; color: var(--ink-soft); }
+#ct_noiDung, #ct_phongHop, #ct_thanhPhan { color: var(--ink); }
+
+/* ============================================================
+   TOAST THEO LOẠI (success / error / warning / info) — thay alert()
+   ============================================================ */
+.toast-notification.toast-success { border-left-color: var(--success); }
+.toast-notification.toast-error { border-left-color: var(--danger); }
+.toast-notification.toast-warning { border-left-color: var(--warn); }
+.toast-notification.toast-info { border-left-color: var(--brand); }
+.toast-notification .toast-icon { font-size: 17px; flex-shrink: 0; }
+.toast-notification .toast-msg { line-height: 1.4; word-break: break-word; }
+.toast-notification.toast-hide { animation: fadeOut 0.25s ease forwards; }
+
+/* ============================================================
+   HỘP THOẠI XÁC NHẬN HIỆN ĐẠI — thay confirm()
+   ============================================================ */
+.confirm-overlay {
+    position: fixed; inset: 0; z-index: 200000;
+    background: rgba(10, 14, 20, 0.55);
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .18s ease;
+    padding: 20px; box-sizing: border-box;
+}
+.confirm-overlay.show { opacity: 1; }
+.confirm-box {
+    background: var(--surface); color: var(--ink);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-lift);
+    max-width: 380px; width: 100%; padding: 26px 24px 20px;
+    text-align: center;
+    transform: translateY(10px) scale(0.97); transition: transform .18s ease;
+}
+.confirm-overlay.show .confirm-box { transform: translateY(0) scale(1); }
+.confirm-icon { font-size: 34px; margin-bottom: 10px; }
+.confirm-msg { font-size: 15px; line-height: 1.6; color: var(--ink); margin-bottom: 22px; white-space: pre-line; }
+.confirm-actions { display: flex; gap: 10px; justify-content: center; }
+.confirm-actions button { flex: 1; padding: 11px 16px; border-radius: var(--radius-sm); font-weight: 600; font-size: 14px; cursor: pointer; border: none; }
+.confirm-actions .btn-huy { background: var(--surface-alt); color: var(--ink-soft); border: 1px solid var(--line); }
+.confirm-actions .btn-luu { background: var(--brand); color: #fff; }
+.confirm-actions .btn-confirm-danger { background: var(--danger); color: #fff; }
+.confirm-actions button:hover { filter: brightness(1.08); }
     </style>
 </head>
 <body>
     <!-- 1. MÀN HÌNH ĐĂNG NHẬP -->
     <div id="loginScreen">
-        <h2 style="font-size: 18px; margin-bottom: 20px;">ĐĂNG NHẬP HỆ THỐNG CÔNG VĂN</h2>
-        <input type="text" id="username" placeholder="Tên đăng nhập (VD: admin)">
-        <input type="password" id="password" placeholder="Mật khẩu">
-        <button onclick="dangNhap()">ĐĂNG NHẬP</button>
-        <p id="loginError" style="color: red; display: none; font-size: 14px; font-weight: bold; margin-top: 10px;">Sai tài khoản hoặc mật khẩu!</p>
+        <div style="font-size: 34px; margin-bottom: 6px;">📋</div>
+        <h2 style="font-size: 18px; margin-bottom: 2px;">HỆ THỐNG QUẢN LÝ CÔNG VĂN</h2>
+        <p style="font-size: 13px; color: var(--ink-faint); margin: 0 0 20px;">Công văn nội bộ &amp; Lịch họp</p>
+        <form onsubmit="event.preventDefault(); dangNhap();">
+            <input type="text" id="username" placeholder="Tên đăng nhập (VD: admin)" autocomplete="username">
+            <input type="password" id="password" placeholder="Mật khẩu" autocomplete="current-password">
+            <button type="submit">ĐĂNG NHẬP</button>
+        </form>
+        <p id="loginError" style="color: var(--danger); display: none; font-size: 13.5px; font-weight: bold; margin-top: 14px;">Sai tài khoản hoặc mật khẩu!</p>
     </div>
 
     <!-- 2. GIAO DIỆN LỊCH -->
@@ -1070,10 +1173,13 @@ tbody tr:hover { background-color:var(--brand-soft) !important; }
                 <button class="btn-icon-header" onclick="toggleChucNang('CONGVAN')" title="Quay lại Công Văn">⬅</button>
                 <h2 class="calendar-title">📅 Lịch họp</h2>
             </div>
-            <!-- NÚT MEETING MỚI ĐỂ BẬT FORM ĐẶT LỊCH -->
-            <button id="btnMeetingAdmin" class="btn-meeting-new" onclick="moModalDatLich()">
-                <span class="ic">+</span> Đặt lịch họp
-            </button>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <!-- NÚT MEETING MỚI ĐỂ BẬT FORM ĐẶT LỊCH -->
+                <button id="btnMeetingAdmin" class="btn-meeting-new" onclick="moModalDatLich()">
+                    <span class="ic">+</span> Đặt lịch họp
+                </button>
+                <button class="btn-theme-toggle" onclick="toggleDarkMode()" title="Chuyển giao diện sáng/tối">🌙</button>
+            </div>
         </div>
 
         <label class="filter-toggle-chip">
@@ -1102,7 +1208,7 @@ tbody tr:hover { background-color:var(--brand-soft) !important; }
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Tên cuộc họp <span style="color: red;">*</span></label>
-                        <input type="text" id="tenCuocHop" class="form-control" placeholder="Ví dụ: Họp phòng ban...">
+                        <input type="text" id="tenCuocHop" class="form-control" maxlength="300" placeholder="Ví dụ: Họp phòng ban...">
                     </div>
                     <div class="form-group">
                         <label>Loại cuộc họp</label>
@@ -1157,7 +1263,7 @@ tbody tr:hover { background-color:var(--brand-soft) !important; }
 
                 <div class="form-group" style="margin-top: 10px;">
                     <label>Nội dung cuộc họp</label>
-                    <textarea id="noiDungHop" class="form-control" rows="3" placeholder="Nhập nội dung chi tiết..."></textarea>
+                    <textarea id="noiDungHop" class="form-control" rows="3" maxlength="3000" placeholder="Nhập nội dung chi tiết..."></textarea>
                 </div>
 
                 <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
@@ -1171,13 +1277,12 @@ tbody tr:hover { background-color:var(--brand-soft) !important; }
     <!-- 4. GIAO DIỆN CHÍNH QUẢN LÝ CÔNG VĂN -->
     <div class="container" id="mainApp">
         <div class="header-top" style="padding: 10px 15px; background: #eee; border-bottom: 2px solid #ccc; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <span id="userInfo" style="font-weight: bold; color: #0056b3; text-transform: uppercase;">Xin chào: </span>
-                
+
                 <!-- ĐÃ ĐƯA NÚT PHÁT THÔNG BÁO VÀO ĐÂY, NGAY TRÊN HEADER ĐỂ DỄ NHÌN THẤY NHẤT -->
-                <button id="btnGuiThongBaoAdmin" onclick="moFormThongBao()" style="display: none; background: #ff9800; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
-                    📢 Phát thông báo
-                </button>
+                <button id="btnGuiThongBaoAdmin" onclick="moFormThongBao()" class="btn-icon-header btn-icon-header-solid" style="display: none;" title="Phát thông báo">📢</button>
+                <button id="btnChuyenLich" onclick="toggleChucNang('LICH')" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">📅 Xem Lịch Họp</button>
             </div>
 
             <div style="display: flex; align-items: center; gap: 6px;">
@@ -1189,12 +1294,12 @@ tbody tr:hover { background-color:var(--brand-soft) !important; }
                 <button class="btn-bell" onclick="moLichSuThongBao()">
                     <span id="iconChuong">🔔</span> <span id="badgeThongBao" class="badge-notif">0</span>
                 </button>
+                <button class="btn-theme-toggle" id="btnThemeToggle" onclick="toggleDarkMode()" title="Chuyển giao diện sáng/tối">🌙</button>
                 <button class="btn-logout" onclick="dangXuat()">Đăng xuất</button>
             </div>
         </div>
 
         <div style="margin-top: 15px;">
-            <button id="btnChuyenLich" onclick="toggleChucNang('LICH')" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">📅 Xem Lịch Họp</button>
             <button id="btnChuyenCongVan" onclick="toggleChucNang('CONGVAN')" style="background: #28a745; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; display: none;">📝 Quản Lý Công Văn</button>
         </div>
 
@@ -1202,27 +1307,27 @@ tbody tr:hover { background-color:var(--brand-soft) !important; }
 
         <div class="counters-container">
             <div class="counter-card all active" id="card-All" onclick="locTheoCard('Tất cả')">
-                <div class="counter-title">Tổng công văn</div>
+                <div class="counter-title">📁 Tổng công văn</div>
                 <div class="counter-num" id="countAll">0</div>
             </div>
             <div class="counter-card chuaxuly" id="card-ChuaXuLy" onclick="locTheoCard('Chưa xử lý')">
-                <div class="counter-title">Chưa xử lý</div>
+                <div class="counter-title">🕓 Chưa xử lý</div>
                 <div class="counter-num" id="countChuaXuLy">0</div>
             </div>
             <div class="counter-card dangxuly" id="card-DangXuLy" onclick="locTheoCard('Đang xử lý')">
-                <div class="counter-title">Đang xử lý</div>
+                <div class="counter-title">⚙️ Đang xử lý</div>
                 <div class="counter-num" id="countDangXuLy">0</div>
             </div>
             <div class="counter-card hoanthanh" id="card-HoanThanh" onclick="locTheoCard('Hoàn thành')">
-                <div class="counter-title">Hoàn thành</div>
+                <div class="counter-title">✅ Hoàn thành</div>
                 <div class="counter-num" id="countHoanThanh">0</div>
             </div>
             <div class="counter-card quahan" id="card-QuaHan" onclick="locTheoCard('Quá hạn')">
-                <div class="counter-title">Quá hạn</div>
+                <div class="counter-title">⏰ Quá hạn</div>
                 <div class="counter-num" id="countQuaHan">0</div>
             </div>
             <div class="counter-card chuyenkysau" id="card-ChuyenKySau" onclick="locTheoCard('Chuyển kỳ sau')">
-                <div class="counter-title">Chuyển kỳ sau</div>
+                <div class="counter-title">↪️ Chuyển kỳ sau</div>
                 <div class="counter-num" id="countChuyenKySau">0</div>
             </div>
         </div>
@@ -1286,17 +1391,17 @@ tbody tr:hover { background-color:var(--brand-soft) !important; }
             
             <div class="form-grid">
                 <div class="form-group"><label>Ngày đến</label><input type="date" id="ngayDen" onchange="tinhTuanBC()"></div>
-                <div class="form-group"><label>Số đến</label><input type="text" id="soDen"></div>
-                <div class="form-group"><label>Cơ quan gửi</label><input type="text" id="coQuanGui"></div>
-                <div class="form-group"><label>Số ký hiệu VB</label><input type="text" id="soKyHieu"></div>
+                <div class="form-group"><label>Số đến</label><input type="text" id="soDen" maxlength="50"></div>
+                <div class="form-group"><label>Cơ quan gửi</label><input type="text" id="coQuanGui" maxlength="300"></div>
+                <div class="form-group"><label>Số ký hiệu VB</label><input type="text" id="soKyHieu" maxlength="200"></div>
                 <div class="form-group"><label>Ngày VB</label><input type="date" id="ngayVB"></div>
-                <div class="form-group full-width"><label>Trích yếu nội dung</label><textarea id="trichYeu" rows="2"></textarea></div>
-                <div class="form-group"><label>BP Chủ trì</label><input type="text" id="bpChuTri"></div>
-                <div class="form-group"><label>BP Phối hợp</label><input type="text" id="bpPhoiHop"></div>
+                <div class="form-group full-width"><label>Trích yếu nội dung</label><textarea id="trichYeu" rows="2" maxlength="3000"></textarea></div>
+                <div class="form-group"><label>BP Chủ trì</label><input type="text" id="bpChuTri" maxlength="300"></div>
+                <div class="form-group"><label>BP Phối hợp</label><input type="text" id="bpPhoiHop" maxlength="300"></div>
                 <div class="form-group"><label>Hạn xử lý</label><input type="date" id="hanXuLy" onchange="tinhToanThoiHan()"></div>
                 <div class="form-group"><label>Số ngày còn</label><input type="text" id="soNgayCon" readonly placeholder="Tự động"></div>
                 <div class="form-group"><label>Cảnh báo</label><input type="text" id="canhBao" readonly placeholder="Tự động"></div>
-                <div class="form-group"><label>Tuần BC</label><input type="text" id="tuanBC" placeholder="Tự động"></div>
+                <div class="form-group"><label>Tuần BC</label><input type="text" id="tuanBC" maxlength="100" placeholder="Tự động"></div>
                 <div class="form-group">
                     <label>Lặp lại</label>
                     <select id="lapLai">
@@ -1341,7 +1446,7 @@ tbody tr:hover { background-color:var(--brand-soft) !important; }
             </div>
             <div style="padding: 15px;">
                 <p style="font-size: 13px; color: #666; margin-top: 0;">Nội dung này sẽ hiển thị ngay lập tức trên màn hình của tất cả user.</p>
-                <textarea id="noiDungThongBao" rows="4" style="width:100%; height:100px; margin-bottom:15px; font-size:15px; padding:10px; box-sizing: border-box; outline: none;" placeholder="Nhập nội dung cần thông báo..."></textarea>
+                <textarea id="noiDungThongBao" rows="4" maxlength="2000" style="width:100%; height:100px; margin-bottom:15px; font-size:15px; padding:10px; box-sizing: border-box; outline: none;" placeholder="Nhập nội dung cần thông báo..."></textarea>
                 <button onclick="thucHienGuiThongBao()" style="background:#ff9800; color:white; padding:10px 15px; border:none; border-radius:4px; cursor:pointer; width:100%; font-weight: bold;">🚀 PHÁT THÔNG BÁO</button>
             </div>
         </div>
@@ -1359,32 +1464,28 @@ tbody tr:hover { background-color:var(--brand-soft) !important; }
         </div>
     </div>
 
-    <div id="toastNotif" class="toast"></div>
+    <!-- Modal chi tiết cuộc họp (click vào sự kiện trên lịch) -->
+    <div id="modalChiTietHop" class="modal" style="z-index: 9999; backdrop-filter: blur(2px);">
+        <div class="modal-content" style="max-width: 500px; font-family: Arial, sans-serif;">
+            <span class="close-btn" onclick="dongModalChiTiet()">&times;</span>
+            <h3 id="ct_tenCuocHop" style="margin-top: 0; color: var(--brand); border-bottom: 2px solid var(--line); padding-bottom: 15px; font-size: 20px;">📌 Chi tiết cuộc họp</h3>
 
-</body>
-</body>
-<script src="app.js" defer></script>
-<div id="modalChiTietHop" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(2px);">
-    <div style="background-color: #ffffff; margin: 10% auto; padding: 25px; border-radius: 10px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); font-family: Arial, sans-serif;">
-        
-        <span onclick="dongModalChiTiet()" style="color: #888; float: right; font-size: 28px; font-weight: bold; cursor: pointer; margin-top: -10px;">&times;</span>
-        
-        <h3 id="ct_tenCuocHop" style="margin-top: 0; color: #0056b3; border-bottom: 2px solid #e9ecef; padding-bottom: 15px; font-size: 20px;">📌 Chi tiết cuộc họp</h3>
-        
-        <div style="line-height: 1.8; font-size: 15px; color: #333;">
-            <p style="margin: 8px 0;">🏢 <b>Phòng:</b> <span id="ct_phongHop"></span></p>
-            <p style="margin: 8px 0;">🕒 <b>Thời gian:</b> <span id="ct_thoiGian" style="color: #d81b60; font-weight: bold;"></span></p>
-            <p style="margin: 8px 0;">👤 <b>Chủ trì:</b> <span id="ct_chuTri"></span></p>
-            <p style="margin: 8px 0;">👥 <b>Thành phần:</b> <span id="ct_thanhPhan" style="display: block; margin-top: 5px; padding: 10px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;"></span></p>
-            <p style="margin: 8px 0;">📝 <b>Nội dung:</b> <span id="ct_noiDung" style="white-space: pre-wrap;"></span></p>
-        </div>
+            <div style="line-height: 1.8; font-size: 15px;">
+                <p style="margin: 8px 0;">🏢 <b>Phòng:</b> <span id="ct_phongHop"></span></p>
+                <p style="margin: 8px 0;">🕒 <b>Thời gian:</b> <span id="ct_thoiGian" style="color: #d81b60; font-weight: bold;"></span></p>
+                <p style="margin: 8px 0;">👤 <b>Chủ trì:</b> <span id="ct_chuTri"></span></p>
+                <p style="margin: 8px 0;">👥 <b>Thành phần:</b> <span id="ct_thanhPhan" style="display: block; margin-top: 5px; padding: 10px; background: var(--surface-alt); border-radius: 6px; border: 1px solid var(--line);"></span></p>
+                <p style="margin: 8px 0;">📝 <b>Nội dung:</b> <span id="ct_noiDung" style="white-space: pre-wrap;"></span></p>
+            </div>
 
-        <div id="khuVucXoaLich" style="margin-top: 25px; border-top: 1px dashed #ccc; padding-top: 15px; display: none; text-align: center; background: #fff5f5; border-radius: 8px; padding-bottom: 15px;">
-            <p style="color: #dc3545; font-size: 14px; font-weight: bold; margin-bottom: 12px;">👉 Bạn là người tạo lịch này. Bạn có muốn XÓA nó không?</p>
-            <button id="btnXacNhanXoaModal" style="background-color: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; margin-right: 10px; box-shadow: 0 2px 4px rgba(220,53,69,0.3);">🗑️ Vâng, Xóa Lịch Này</button>
-            <button onclick="dongModalChiTiet()" style="background-color: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;">❌ Hủy bỏ</button>
+            <div id="khuVucXoaLich" style="margin-top: 25px; border-top: 1px dashed var(--line); padding-top: 15px; display: none; text-align: center; background: var(--danger-soft); border-radius: 8px; padding-bottom: 15px;">
+                <p style="color: var(--danger); font-size: 14px; font-weight: bold; margin-bottom: 12px;">👉 Bạn là người tạo lịch này. Bạn có muốn XÓA nó không?</p>
+                <button id="btnXacNhanXoaModal" class="btn-confirm-danger" style="padding: 10px 20px; margin-right: 10px;">🗑️ Vâng, Xóa Lịch Này</button>
+                <button onclick="dongModalChiTiet()" class="btn-huy" style="padding: 10px 20px;">❌ Hủy bỏ</button>
+            </div>
         </div>
     </div>
-</div>
+
+    <script src="app.js" defer></script>
 </body>
 </html>

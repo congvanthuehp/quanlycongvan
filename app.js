@@ -1,3 +1,35 @@
+    // =====================================================================
+    // CHẾ ĐỘ SÁNG/TỐI (Dark mode) — áp dụng ngay khi script chạy để tránh
+    // nháy sáng trước khi CSS override kịp đọc lựa chọn đã lưu của người dùng.
+    // =====================================================================
+    (function initTheme() {
+        let daLuu = localStorage.getItem('cv_theme');
+        if (daLuu === 'dark' || daLuu === 'light') {
+            document.documentElement.setAttribute('data-theme', daLuu);
+        }
+    })();
+
+    function dangODangToi() {
+        let daLuu = localStorage.getItem('cv_theme');
+        if (daLuu === 'dark') return true;
+        if (daLuu === 'light') return false;
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
+    function capNhatIconTheme() {
+        let icon = dangODangToi() ? '☀️' : '🌙';
+        document.querySelectorAll('.btn-theme-toggle').forEach(btn => btn.innerText = icon);
+    }
+
+    function toggleDarkMode() {
+        let toiMoi = !dangODangToi();
+        document.documentElement.setAttribute('data-theme', toiMoi ? 'dark' : 'light');
+        localStorage.setItem('cv_theme', toiMoi ? 'dark' : 'light');
+        capNhatIconTheme();
+    }
+
+    document.addEventListener('DOMContentLoaded', capNhatIconTheme);
+
     const firebaseConfig = {
       apiKey: "AIzaSyCi3UUhmd_D2GvzIPY-pHnPCx4fSVGxI68",
       authDomain: "quanlycongvan-b89b3.firebaseapp.com",
@@ -20,32 +52,120 @@
     // Danh sách tài khoản người dùng thông thường
     const danhSachUserThuong = ["NVDTPC", "KT1", "KT2", "QLDN", "HKD1", "HKD2", "HKD3", "HC", "Thukhac", "truongtcs", "photruongtcs"];
 
+    // =====================================================================
+    // TIỆN ÍCH BẢO MẬT & GIAO DIỆN DÙNG CHUNG
+    // =====================================================================
+
+    // Chống XSS: mọi dữ liệu do người dùng nhập (kể cả từ Excel import) đều
+    // phải đi qua hàm này trước khi gắn vào innerHTML, vì nội dung công văn/
+    // lịch họp/thông báo được hiển thị lại cho MỌI người dùng khác.
+    function escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    // Toast hiện đại thay thế alert() mặc định của trình duyệt
+    function showToast(message, type = 'info') {
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+        let icon = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }[type] || 'ℹ️';
+        let toast = document.createElement('div');
+        toast.className = `toast-notification toast-${type}`;
+        toast.innerHTML = `<span class="toast-icon">${icon}</span><div class="toast-msg">${escapeHtml(message)}</div>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('toast-hide');
+            setTimeout(() => toast.remove(), 250);
+        }, 4000);
+    }
+
+    // Hộp thoại xác nhận hiện đại thay thế confirm() mặc định (bất đồng bộ - dùng await/then)
+    function showConfirm(message, opts = {}) {
+        return new Promise(resolve => {
+            let overlay = document.createElement('div');
+            overlay.className = 'confirm-overlay';
+            overlay.innerHTML = `
+                <div class="confirm-box">
+                    <div class="confirm-icon">${opts.danger ? '⚠️' : '❓'}</div>
+                    <div class="confirm-msg">${escapeHtml(message).replace(/\n/g, '<br>')}</div>
+                    <div class="confirm-actions">
+                        <button type="button" class="btn-huy confirm-cancel">Hủy bỏ</button>
+                        <button type="button" class="${opts.danger ? 'btn-confirm-danger' : 'btn-luu'} confirm-ok">${escapeHtml(opts.okText || 'Đồng ý')}</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+            requestAnimationFrame(() => overlay.classList.add('show'));
+            function dong(ketQua) {
+                overlay.classList.remove('show');
+                setTimeout(() => overlay.remove(), 180);
+                resolve(ketQua);
+            }
+            overlay.querySelector('.confirm-cancel').addEventListener('click', () => dong(false));
+            overlay.querySelector('.confirm-ok').addEventListener('click', () => dong(true));
+            overlay.addEventListener('click', e => { if (e.target === overlay) dong(false); });
+        });
+    }
+
+    // Giới hạn số lần đăng nhập sai (chống dò mật khẩu tự động - defense in depth,
+    // KHÔNG thay thế cho việc kiểm tra mật khẩu ở phía server)
+    const SO_LAN_SAI_TOI_DA = 5;
+    const THOI_GIAN_KHOA_MS = 60 * 1000;
+
+    function laySoLanSai() {
+        return parseInt(localStorage.getItem('cv_login_fail_count') || '0', 10);
+    }
+    function layThoiDiemKhoa() {
+        return parseInt(localStorage.getItem('cv_login_lock_until') || '0', 10);
+    }
+    function ghiNhanDangNhapSai() {
+        let soLan = laySoLanSai() + 1;
+        localStorage.setItem('cv_login_fail_count', String(soLan));
+        if (soLan >= SO_LAN_SAI_TOI_DA) {
+            localStorage.setItem('cv_login_lock_until', String(Date.now() + THOI_GIAN_KHOA_MS));
+            localStorage.setItem('cv_login_fail_count', '0');
+        }
+    }
+    function xoaDemDangNhapSai() {
+        localStorage.removeItem('cv_login_fail_count');
+        localStorage.removeItem('cv_login_lock_until');
+    }
+
     function dangNhap() {
+        let khoaDenLuc = layThoiDiemKhoa();
+        if (khoaDenLuc > Date.now()) {
+            let giaySau = Math.ceil((khoaDenLuc - Date.now()) / 1000);
+            document.getElementById('loginError').innerText = `Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau ${giaySau} giây.`;
+            document.getElementById('loginError').style.display = "block";
+            return;
+        }
+
         let u = document.getElementById('username').value.trim();
         let p = document.getElementById('password').value.trim();
-        
-        if (p === '123') {
-            if (u === 'admin') {
-                auth.signInAnonymously() 
-                    .then(() => {
-                        localStorage.setItem('cv_user', u);
-                        localStorage.setItem('cv_role', 'admin');
-                        document.getElementById('loginError').style.display = "none";
-                    })
-                    .catch(err => alert("Lỗi Firebase: " + err.message));
-            } else if (danhSachUserThuong.includes(u)) {
-                auth.signInAnonymously() 
-                    .then(() => {
-                        localStorage.setItem('cv_user', u);
-                        localStorage.setItem('cv_role', 'user');
-                        document.getElementById('loginError').style.display = "none";
-                    })
-                    .catch(err => alert("Lỗi Firebase: " + err.message));
-            } else {
-                document.getElementById('loginError').style.display = "block";
-            }
+
+        let loginErrorEl = document.getElementById('loginError');
+        loginErrorEl.innerText = "Sai tài khoản hoặc mật khẩu!";
+
+        if (p === '123' && (u === 'admin' || danhSachUserThuong.includes(u))) {
+            auth.signInAnonymously()
+                .then(() => {
+                    localStorage.setItem('cv_user', u);
+                    localStorage.setItem('cv_role', u === 'admin' ? 'admin' : 'user');
+                    xoaDemDangNhapSai();
+                    loginErrorEl.style.display = "none";
+                })
+                .catch(err => showToast("Lỗi Firebase: " + err.message, 'error'));
         } else {
-            document.getElementById('loginError').style.display = "block";
+            ghiNhanDangNhapSai();
+            loginErrorEl.style.display = "block";
         }
     }
 
@@ -130,7 +250,7 @@
                 canhBao: document.getElementById('canhBao').value || ''
             };
 
-            if(!cv.trichYeu) { alert("Vui lòng nhập Trích yếu nội dung!"); return; }
+            if(!cv.trichYeu) { showToast("Vui lòng nhập Trích yếu nội dung!", 'warning'); return; }
 
             if(cvId) {
                 let cvHienTai = danhSachCongVan.find(item => item.key === cvId);
@@ -142,7 +262,7 @@
                 db.ref('cong_van').push(cv).then(() => dongForm());
             }
         } else {
-            if(!cvId) { alert("Bạn không có quyền thêm mới công văn!"); return; }
+            if(!cvId) { showToast("Bạn không có quyền thêm mới công văn!", 'warning'); return; }
 
             let cvHienTai = danhSachCongVan.find(item => item.key === cvId);
             if(!cvHienTai) return;
@@ -165,16 +285,17 @@
 
             db.ref('cong_van/' + cvId).update(duLieuCapNhatCuaUser)
                 .then(() => {
-                    alert("Cập nhật trạng thái công văn thành công!");
+                    showToast("Cập nhật trạng thái công văn thành công!", 'success');
                     dongForm();
                 })
-                .catch(err => alert("Lỗi khi cập nhật dữ liệu: " + err.message));
+                .catch(err => showToast("Lỗi khi cập nhật dữ liệu: " + err.message, 'error'));
         }
     }
 
-    function xoaCongVan(key) {
+    async function xoaCongVan(key) {
         if(!isAdmin) return;
-        if(confirm("Bạn có chắc chắn muốn XÓA công văn này không?")) {
+        let dongY = await showConfirm("Bạn có chắc chắn muốn XÓA công văn này không?", { danger: true, okText: 'Xóa' });
+        if(dongY) {
             db.ref('cong_van/' + key).remove();
         }
     }
@@ -229,23 +350,24 @@
     /* ========================================================= */
     /* HOÀN THIỆN HÀM IMPORT EXCEL VÀ CÁC HÀM PHÍA DƯỚI CỦA BẠN */
     /* ========================================================= */
-    function importExcel(element) {
-        if (!isAdmin) { alert("Bạn không có quyền thao tác!"); return; }
+    async function importExcel(element) {
+        if (!isAdmin) { showToast("Bạn không có quyền thao tác!", 'warning'); return; }
         let file = element.files[0];
         if (!file) return;
 
         let reader = new FileReader();
-        reader.onload = function (e) {
+        reader.onload = async function (e) {
             try {
                 let data = new Uint8Array(e.target.result);
                 let workbook = XLSX.read(data, { type: 'array' });
                 let firstSheetName = workbook.SheetNames[0];
                 let worksheet = workbook.Sheets[firstSheetName];
-                
-                let jsonData = XLSX.utils.sheet_to_json(worksheet);
-                if (jsonData.length === 0) { alert("File Excel trống hoặc lỗi định dạng!"); return; }
 
-                if (confirm("Tìm thấy " + jsonData.length + " hàng dữ liệu. Tiến hành import vào hệ thống?")) {
+                let jsonData = XLSX.utils.sheet_to_json(worksheet);
+                if (jsonData.length === 0) { showToast("File Excel trống hoặc lỗi định dạng!", 'warning'); element.value = ''; return; }
+
+                let dongY = await showConfirm("Tìm thấy " + jsonData.length + " hàng dữ liệu. Tiến hành import vào hệ thống?", { okText: 'Import' });
+                if (dongY) {
                     let currentDataMap = {};
                     danhSachCongVan.forEach(cv => {
                         if (cv.soDen) {
@@ -332,10 +454,10 @@
                             successAddCount++;
                         }
                     });
-                    alert("Import hoàn thành! Thêm mới: " + successAddCount + ", Cập nhật: " + successUpdateCount);
+                    showToast("Import hoàn thành! Thêm mới: " + successAddCount + ", Cập nhật: " + successUpdateCount, 'success');
                 }
             } catch (error) {
-                alert("Lỗi import file: " + error.message);
+                showToast("Lỗi import file: " + error.message, 'error');
             }
             element.value = '';
         };
@@ -476,19 +598,19 @@
             htmlBang += `
                 <tr onclick="xuLyClick('${cv.key}')" style="${rowStyle}">
                     <td>${i + 1}</td>
-                    <td>${cv.ngayDen}</td>
-                    <td>${cv.soDen}</td>
-                    <td>${cv.coQuanGui}</td>
-                    <td>${cv.soKyHieu || ''}</td>
-                    <td>${cv.ngayVB}</td>
-                    <td>${cv.trichYeu}</td>
-                    <td>${cv.bpChuTri}</td>
-                    <td>${cv.bpPhoiHop}</td> 
-                    <td>${cv.hanXuLy}</td>
-                    <td>${cv.soNgayCon}</td>
-                    <td><span class="status-badge ${mt}" style="${badgeStyle}">${cv.trangThai}</span></td>
-                    <td class="${cb}">${cv.canhBao}</td>
-                    <td><strong>${cv.tuanBC || ''}</strong></td>
+                    <td>${escapeHtml(cv.ngayDen)}</td>
+                    <td>${escapeHtml(cv.soDen)}</td>
+                    <td>${escapeHtml(cv.coQuanGui)}</td>
+                    <td>${escapeHtml(cv.soKyHieu || '')}</td>
+                    <td>${escapeHtml(cv.ngayVB)}</td>
+                    <td>${escapeHtml(cv.trichYeu)}</td>
+                    <td>${escapeHtml(cv.bpChuTri)}</td>
+                    <td>${escapeHtml(cv.bpPhoiHop)}</td>
+                    <td>${escapeHtml(cv.hanXuLy)}</td>
+                    <td>${escapeHtml(cv.soNgayCon)}</td>
+                    <td><span class="status-badge ${mt}" style="${badgeStyle}">${escapeHtml(cv.trangThai)}</span></td>
+                    <td class="${cb}">${escapeHtml(cv.canhBao)}</td>
+                    <td><strong>${escapeHtml(cv.tuanBC || '')}</strong></td>
                     ${cotHanhDongHTML}
                 </tr>
             `;
@@ -512,7 +634,7 @@
                 if (isAdmin) {
                     xoaCongVan(key);
                 } else {
-                    alert("Bạn không có quyền xóa!");
+                    showToast("Bạn không có quyền xóa!", 'warning');
                 }
             }
             clickCount = 0;
@@ -547,45 +669,56 @@
         tinhTuanBC();
     }
 
+    // Chống "CSV/Excel Formula Injection": nếu 1 ô bắt đầu bằng =, +, -, @
+    // (hoặc tab/carriage-return) thì Excel có thể diễn giải thành công thức khi
+    // mở file, cho phép dữ liệu nhập vào (VD: từ Trích yếu) thực thi lệnh trên
+    // máy người mở báo cáo. Thêm dấu ' ở đầu để ép Excel hiểu là văn bản thuần.
+    function sanitizeForExcel(value) {
+        if (value === null || value === undefined) return value;
+        let s = String(value);
+        if (/^[=+\-@\t\r]/.test(s)) return "'" + s;
+        return value;
+    }
+
     function exportExcel() {
         try {
             if (typeof XLSX === 'undefined') {
-                alert("Hệ thống chưa nhận thư viện Excel! Hãy kiểm tra thẻ script trong head.");
+                showToast("Hệ thống chưa nhận thư viện Excel! Hãy kiểm tra thẻ script trong head.", 'error');
                 return;
             }
             if (!danhSachCongVan || danhSachCongVan.length === 0) {
-                alert("Không có dữ liệu để xuất!");
+                showToast("Không có dữ liệu để xuất!", 'warning');
                 return;
             }
 
             let filter = (typeof boLocHienTai !== 'undefined') ? boLocHienTai : "Tất cả";
-            let danhSachXuat = filter === 'Tất cả' 
-                ? danhSachCongVan 
+            let danhSachXuat = filter === 'Tất cả'
+                ? danhSachCongVan
                 : danhSachCongVan.filter(item => item.trangThai === filter);
 
             if (danhSachXuat.length === 0) {
-                alert("Không có công văn nào phù hợp để xuất!");
+                showToast("Không có công văn nào phù hợp để xuất!", 'warning');
                 return;
             }
 
             let excelRows = danhSachXuat.map((cv, index) => {
                 return {
                     'STT': index + 1,
-                    'Ngày đến': cv.ngayDen || '',
-                    'Số đến': cv.soDen || '',
-                    'Cơ quan gửi': cv.coQuanGui || '',
-                    'Số ký hiệu VB': cv.soKyHieu || '',
-                    'Ngày VB': cv.ngayVB || '',
-                    'Trích yếu nội dung': cv.trichYeu || '',
-                    'BP Chủ trì': cv.bpChuTri || '',
-                    'BP Phối hợp': cv.bpPhoiHop || '',
-                    'Hạn xử lý': cv.hanXuLy || '',
+                    'Ngày đến': sanitizeForExcel(cv.ngayDen || ''),
+                    'Số đến': sanitizeForExcel(cv.soDen || ''),
+                    'Cơ quan gửi': sanitizeForExcel(cv.coQuanGui || ''),
+                    'Số ký hiệu VB': sanitizeForExcel(cv.soKyHieu || ''),
+                    'Ngày VB': sanitizeForExcel(cv.ngayVB || ''),
+                    'Trích yếu nội dung': sanitizeForExcel(cv.trichYeu || ''),
+                    'BP Chủ trì': sanitizeForExcel(cv.bpChuTri || ''),
+                    'BP Phối hợp': sanitizeForExcel(cv.bpPhoiHop || ''),
+                    'Hạn xử lý': sanitizeForExcel(cv.hanXuLy || ''),
                     'Số ngày còn': (cv.soNgayCon !== undefined && cv.soNgayCon !== null) ? cv.soNgayCon : '',
-                    'Lặp lại': cv.lapLai || 'Một lần',
-                    'Trạng thái': cv.trangThai || '',
-                    'Ngày hoàn thành': cv.ngayHoanThanh || '',
-                    'Tuần BC': cv.tuanBC || '',
-                    'Cảnh báo': cv.canhBao || ''
+                    'Lặp lại': sanitizeForExcel(cv.lapLai || 'Một lần'),
+                    'Trạng thái': sanitizeForExcel(cv.trangThai || ''),
+                    'Ngày hoàn thành': sanitizeForExcel(cv.ngayHoanThanh || ''),
+                    'Tuần BC': sanitizeForExcel(cv.tuanBC || ''),
+                    'Cảnh báo': sanitizeForExcel(cv.canhBao || '')
                 };
             });
 
@@ -599,7 +732,7 @@
 
             XLSX.writeFile(workbook, filename);
         } catch (error) {
-            alert("Lỗi xuất Excel: " + error.message);
+            showToast("Lỗi xuất Excel: " + error.message, 'error');
         }
     }
 
@@ -640,10 +773,10 @@
                     if (cv.lichSuSua && cv.lichSuSua.length > 0) {
                         cv.lichSuSua.forEach(log => {
                             danhSachLichSu.innerHTML += `<div style="margin-bottom:6px; border-bottom:1px solid #eee; padding-bottom:4px;">
-                                👤 <strong>User:</strong> <span style="color:#0056b3;">${log.user}</span> | 
-                                📌 <strong>Trạng thái:</strong> [${log.trangThai}] | 
-                                📆 <strong>Ngày HT:</strong> [${log.ngayHoanThanh || 'Trống'}] 
-                                <br><small style="color:#888;">⏱️ Lúc: ${log.thoiGian}</small>
+                                👤 <strong>User:</strong> <span style="color:#0056b3;">${escapeHtml(log.user)}</span> |
+                                📌 <strong>Trạng thái:</strong> [${escapeHtml(log.trangThai)}] |
+                                📆 <strong>Ngày HT:</strong> [${escapeHtml(log.ngayHoanThanh || 'Trống')}]
+                                <br><small style="color:#888;">⏱️ Lúc: ${escapeHtml(log.thoiGian)}</small>
                             </div>`;
                         });
                     } else {
@@ -689,18 +822,18 @@
     function thucHienGuiThongBao() {
         if(!isAdmin) return;
         let msg = document.getElementById('noiDungThongBao').value.trim();
-        if(!msg) { alert('Vui lòng nhập nội dung thông báo!'); return; }
-        
+        if(!msg) { showToast('Vui lòng nhập nội dung thông báo!', 'warning'); return; }
+
         // Đẩy dữ liệu vào nhánh mới là 'thong_bao_he_thong_danh_sach'
         db.ref('thong_bao_he_thong_danh_sach').push({
             noidung: msg,
             nguoigui: localStorage.getItem('cv_user') || 'Admin',
             thoigian: Date.now()
         }).then(() => {
-            alert("Đã gửi thông báo thành công!");
+            showToast("Đã gửi thông báo thành công!", 'success');
             dongFormThongBao();
         }).catch(err => {
-            alert("Lỗi khi gửi: " + err.message);
+            showToast("Lỗi khi gửi: " + err.message, 'error');
         });
     }
 
@@ -756,7 +889,7 @@ db.ref('thong_bao_he_thong_danh_sach').on('value', snap => {
                 tb.key = child.key;
                 
                 // Lấy danh sách các user đã đọc của thông báo này
-                let danhSachUserDaXem = dataDaDoc[tb.key] ? Object.keys(dataDoc = dataDaDoc[tb.key]) : [];
+                let danhSachUserDaXem = dataDaDoc[tb.key] ? Object.keys(dataDaDoc[tb.key]) : [];
                 tb.daXemList = danhSachUserDaXem; // Lưu vào mảng để hiển thị công khai
 
                 // Kiểm tra xem chính User đang đăng nhập này đã đọc chưa
@@ -820,7 +953,7 @@ let isUnread = !(tb.daXemList && tb.daXemList.includes(currentUser)) ? 'unread' 
         if (isAdmin) {
             if (tb.daXemList && tb.daXemList.length > 0) {
                 dongNguoiDaXemHTML = `<div style="margin-top: 8px; font-size: 12px; color: #28a745; background: #e8f5e9; padding: 4px 8px; border-radius: 4px;">
-                    👁️ <strong>Đã xem:</strong> ${tb.daXemList.join(', ')}
+                    👁️ <strong>Đã xem:</strong> ${escapeHtml(tb.daXemList.join(', '))}
                 </div>`;
             } else {
                 dongNguoiDaXemHTML = `<div style="margin-top: 8px; font-size: 12px; color: #666; background: #eee; padding: 4px 8px; border-radius: 4px;">
@@ -832,8 +965,8 @@ let isUnread = !(tb.daXemList && tb.daXemList.includes(currentUser)) ? 'unread' 
         htmlThongBao += `
             <div class="tb-item ${isUnread}" style="border-bottom: 1px solid #ddd; padding: 12px; background: ${isUnread ? '#e6f7ff' : '#fff'}">
                 <div class="tb-time" style="font-size: 12px; color: #888;">🕒 ${timeString} ${nutXoaHTMl}</div>
-                <div class="tb-sender" style="font-weight: bold; color: #333;">👤 ${tb.nguoigui}</div>
-                <p class="tb-msg" style="margin: 5px 0; white-space: pre-wrap;">${tb.noidung}</p>
+                <div class="tb-sender" style="font-weight: bold; color: #333;">👤 ${escapeHtml(tb.nguoigui)}</div>
+                <p class="tb-msg" style="margin: 5px 0; white-space: pre-wrap;">${escapeHtml(tb.noidung)}</p>
                 ${dongNguoiDaXemHTML}
             </div>
         `;
@@ -844,15 +977,16 @@ let isUnread = !(tb.daXemList && tb.daXemList.includes(currentUser)) ? 'unread' 
 // ==========================================================================
 // 1. QUẢN LÝ THÔNG BÀO HỆ THỐNG (CHỈ ADMIN)
 // ==========================================================================
-function xoaThongBao(key) {
+async function xoaThongBao(key) {
     if(!isAdmin) return;
-    if(confirm("Bạn có chắc chắn muốn XÓA thông báo này khỏi hệ thống không?")) {
+    let dongY = await showConfirm("Bạn có chắc chắn muốn XÓA thông báo này khỏi hệ thống không?", { danger: true, okText: 'Xóa' });
+    if(dongY) {
         db.ref('thong_bao_he_thong_danh_sach/' + key).remove()
         .then(() => {
             db.ref('thong_bao_da_doc/' + key).remove();
         })
         .catch(err => {
-            alert("Lỗi khi xóa: " + err.message);
+            showToast("Lỗi khi xóa: " + err.message, 'error');
         });
     }
 }
@@ -1033,9 +1167,9 @@ function initCalendar() {
                         detailsDiv.style.lineHeight = '1.5';
                         
                         detailsDiv.innerHTML = `
-                            <div style="margin-bottom: 4px;">👤 <b>Chủ trì:</b> ${p.nguoiChuTri || 'Chưa rõ'}</div>
-                            <div style="margin-bottom: 4px;">👥 <b>Phòng ban:</b> ${dsThamDu}</div>
-                            <div style="white-space: pre-wrap; word-break: break-word; margin-bottom: 4px;">📝 <b>Nội dung:</b> ${p.noiDung || 'Không có'}</div>
+                            <div style="margin-bottom: 4px;">👤 <b>Chủ trì:</b> ${escapeHtml(p.nguoiChuTri || 'Chưa rõ')}</div>
+                            <div style="margin-bottom: 4px;">👥 <b>Phòng ban:</b> ${escapeHtml(dsThamDu)}</div>
+                            <div style="white-space: pre-wrap; word-break: break-word; margin-bottom: 4px;">📝 <b>Nội dung:</b> ${escapeHtml(p.noiDung || 'Không có')}</div>
                             ${nutXoaHtml}
                         `;
                         titleEl.appendChild(detailsDiv);
@@ -1049,14 +1183,15 @@ function initCalendar() {
             let p = info.event.extendedProps;
             let dsThamDu = (p.thanhPhan && p.thanhPhan.length > 0) ? p.thanhPhan.join(', ') : 'Không có';
             
-            // Xử lý bôi màu nổi bật cho các Lãnh đạo
-            let chuTriHienThi = highlightLanhDao(p.nguoiChuTri);
-            let thanhPhanHienThi = highlightLanhDao(dsThamDu);
+            // Xử lý bôi màu nổi bật cho các Lãnh đạo (escape trước, highlight sau vì
+            // highlightLanhDao tự chèn thêm HTML tin cậy đè lên phần văn bản đã escape)
+            let chuTriHienThi = highlightLanhDao(escapeHtml(p.nguoiChuTri));
+            let thanhPhanHienThi = highlightLanhDao(escapeHtml(dsThamDu));
 
             // Đẩy dữ liệu vào Modal HTML
-            document.getElementById('ct_tenCuocHop').innerHTML = `📌 ${p.tenCuocHop}`;
-            document.getElementById('ct_phongHop').innerHTML = p.phongHop;
-            document.getElementById('ct_thoiGian').innerHTML = `${p.gioBatDau} - ${p.gioKetThuc} (Ngày ${p.ngayHop})`;
+            document.getElementById('ct_tenCuocHop').innerHTML = `📌 ${escapeHtml(p.tenCuocHop)}`;
+            document.getElementById('ct_phongHop').innerHTML = escapeHtml(p.phongHop);
+            document.getElementById('ct_thoiGian').innerHTML = `${escapeHtml(p.gioBatDau)} - ${escapeHtml(p.gioKetThuc)} (Ngày ${escapeHtml(p.ngayHop)})`;
             document.getElementById('ct_chuTri').innerHTML = chuTriHienThi;
             document.getElementById('ct_thanhPhan').innerHTML = thanhPhanHienThi;
             document.getElementById('ct_noiDung').innerText = p.noiDung || 'Không có';
@@ -1098,7 +1233,12 @@ function initCalendar() {
     });
     
     calendar.render();
-    
+
+    // Buộc FullCalendar đo lại đúng chiều rộng thật của khung chứa và tính lại
+    // độ rộng từng cột ngày - nếu không gọi lại, lưới tháng có thể giữ độ rộng
+    // cột tính từ lần đo đầu tiên và bị tràn ra ngoài màn hình di động.
+    setTimeout(() => { if (calendar) calendar.updateSize(); }, 50);
+
     // Cập nhật lại lịch khi có dữ liệu mới từ Firebase
     db.ref('lich_hop').on('value', () => { 
         if(calendar) calendar.refetchEvents(); 
@@ -1248,12 +1388,12 @@ function luuLichHop() {
 
     // Validate dữ liệu
     if(!tenCuocHop || !ngayHop || !gioBatDau || !gioKetThuc) {
-        alert("Vui lòng điền đầy đủ các thông tin bắt buộc (*)");
+        showToast("Vui lòng điền đầy đủ các thông tin bắt buộc (*)", 'warning');
         return;
     }
-    
+
     if (gioBatDau >= gioKetThuc) {
-        alert("Giờ bắt đầu phải nhỏ hơn Giờ kết thúc!");
+        showToast("Giờ bắt đầu phải nhỏ hơn Giờ kết thúc!", 'warning');
         return;
     }
 
@@ -1275,31 +1415,31 @@ function luuLichHop() {
     if(btnSubmit) btnSubmit.disabled = true;
 
     db.ref('lich_hop').push(lichData).then(() => {
-        alert("Đã đặt lịch họp thành công!");
+        showToast("Đã đặt lịch họp thành công!", 'success');
         dongModalDatLich();
     }).catch(err => {
-        alert("Lỗi: " + err.message);
+        showToast("Lỗi: " + err.message, 'error');
     }).finally(() => {
         if(btnSubmit) btnSubmit.disabled = false;
     });
 }
 
 // HÀM XỬ LÝ XÓA CUỘC HỌP TRÊN FIREBASE (Dành cho tất cả mọi người)
-window.xoaCuocHop = function(eventId) {
+window.xoaCuocHop = async function(eventId) {
     // Hiện hộp thoại cảnh báo trước khi xóa (Bắt buộc để tránh xóa nhầm)
-    let xacNhan = confirm("⚠️ CẢNH BÁO:\nBạn có chắc chắn muốn XÓA cuộc họp này không?\nHành động này sẽ xóa vĩnh viễn trên toàn hệ thống!");
-    
+    let xacNhan = await showConfirm("Bạn có chắc chắn muốn XÓA cuộc họp này không?\nHành động này sẽ xóa vĩnh viễn trên toàn hệ thống!", { danger: true, okText: 'Xóa' });
+
     if (xacNhan) {
         db.ref('lich_hop').child(eventId).remove()
         .then(() => {
-            alert("✅ Đã xóa cuộc họp thành công!");
+            showToast("Đã xóa cuộc họp thành công!", 'success');
             // Làm mới lại lịch hiển thị ngay lập tức
             if (typeof calendar !== 'undefined' && calendar) {
                 calendar.refetchEvents();
             }
         })
         .catch((error) => {
-            alert("❌ Lỗi khi xóa: " + error.message);
+            showToast("Lỗi khi xóa: " + error.message, 'error');
             console.error("Lỗi xóa Firebase:", error);
         });
     }
@@ -1321,8 +1461,8 @@ function hienThiThongBaoMoi(data) {
         <span style="font-size: 20px;">📅</span>
         <div style="flex-grow: 1;">
             <strong style="color: #28a745; display: block; margin-bottom: 2px;">Lịch họp mới vừa được đặt!</strong>
-            <span style="font-weight: 500;">${data.tenCuocHop}</span> <br>
-            <small style="color: #adb5bd;">📍 Phòng: ${data.phongHop} | 🕒 ${data.gioBatDau} - ${data.ngayHop}</small>
+            <span style="font-weight: 500;">${escapeHtml(data.tenCuocHop)}</span> <br>
+            <small style="color: #adb5bd;">📍 Phòng: ${escapeHtml(data.phongHop)} | 🕒 ${escapeHtml(data.gioBatDau)} - ${escapeHtml(data.ngayHop)}</small>
         </div>
     `;
 
