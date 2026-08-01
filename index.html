@@ -947,6 +947,110 @@ tbody tr:hover { background-color:var(--brand-soft) !important; }
 @media (max-width: 768px) {
     .btn-icon-header { width: 34px; height: 34px; font-size: 15px; }
 }
+/* ============================================================
+   NÂNG CẤP GIAO DIỆN — TAB LỊCH HỌP
+   ============================================================ */
+.calendar-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow);
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+.calendar-topbar-left { display: flex; align-items: center; gap: 12px; }
+.calendar-title {
+    font-family: 'Fraunces', serif !important;
+    font-size: 19px !important;
+    margin: 0 !important;
+    color: var(--ink) !important;
+    font-weight: 600;
+    text-transform: none !important;
+}
+.btn-meeting-new {
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform .15s ease, filter .15s ease;
+}
+.btn-meeting-new .ic { font-size: 17px; line-height: 1; font-weight: 700; }
+.btn-meeting-new:hover { filter: brightness(1.08); transform: translateY(-2px); }
+.btn-meeting-new:active { transform: scale(0.97); }
+
+/* Công tắc lọc "Chỉ hiển thị lịch của Trưởng/Phó TCS" — dạng switch chuyên nghiệp */
+.filter-toggle-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    user-select: none;
+}
+.filter-toggle-chip input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
+.filter-toggle-chip .toggle-track {
+    flex-shrink: 0;
+    width: 40px; height: 23px;
+    background: var(--surface-alt);
+    border-radius: 20px;
+    position: relative;
+    transition: background-color .2s ease;
+    border: 1px solid var(--line);
+}
+.filter-toggle-chip .toggle-thumb {
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 17px; height: 17px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    transition: transform .2s ease;
+}
+.filter-toggle-chip input:checked + .toggle-track { background: var(--brand); border-color: var(--brand); }
+.filter-toggle-chip input:checked + .toggle-track .toggle-thumb { transform: translateX(17px); }
+.filter-toggle-chip .toggle-label { font-size: 13.5px; font-weight: 600; color: var(--ink-soft); }
+
+/* FullCalendar — phối màu & bo góc đồng bộ design system (không đụng size/padding đã tối ưu mobile) */
+.calendar-main { border: 1px solid var(--line) !important; }
+.fc .fc-toolbar-title { font-family: 'Fraunces', serif !important; color: var(--ink) !important; }
+.fc .fc-button-primary {
+    background: var(--surface) !important;
+    border-color: var(--line) !important;
+    color: var(--ink-soft) !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: none !important;
+    text-transform: capitalize;
+}
+.fc .fc-button-primary:hover { background: var(--brand-soft) !important; color: var(--brand) !important; }
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+    background: var(--brand) !important;
+    border-color: var(--brand) !important;
+    color: #fff !important;
+}
+.fc .fc-today-button:disabled { opacity: .5; }
+.fc-theme-standard th { background: var(--surface-alt) !important; border-color: var(--line) !important; }
+.fc-theme-standard td { border-color: var(--line) !important; }
+.fc .fc-daygrid-day.fc-day-today { background: var(--brand-soft) !important; }
+.fc-daygrid-day-number { color: var(--ink) !important; font-weight: 500; }
+.fc-event { border: none !important; border-radius: 6px !important; font-weight: 500; }
+.fc-list-event:hover td { background: var(--brand-soft) !important; }
     </style>
 </head>
 <body>
@@ -960,22 +1064,24 @@ tbody tr:hover { background-color:var(--brand-soft) !important; }
     </div>
 
     <!-- 2. GIAO DIỆN LỊCH -->
-    <div id="calendarApp" style="display: none; padding: 20px; background: #f4f7f6; min-height: 100vh;">
-        <div style="margin-bottom: 15px; text-align: left; display: flex; gap: 10px;">
-            <button onclick="toggleChucNang('CONGVAN')" style="background: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                ⬅ Quay lại Công Văn
-            </button>
+    <div id="calendarApp" style="display: none; padding: 16px; background: var(--bg); min-height: 100vh; box-sizing: border-box;">
+        <div class="calendar-topbar">
+            <div class="calendar-topbar-left">
+                <button class="btn-icon-header" onclick="toggleChucNang('CONGVAN')" title="Quay lại Công Văn">⬅</button>
+                <h2 class="calendar-title">📅 Lịch họp</h2>
+            </div>
             <!-- NÚT MEETING MỚI ĐỂ BẬT FORM ĐẶT LỊCH -->
-            <button id="btnMeetingAdmin" onclick="moModalDatLich()" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                📅 Meeting
+            <button id="btnMeetingAdmin" class="btn-meeting-new" onclick="moModalDatLich()">
+                <span class="ic">+</span> Đặt lịch họp
             </button>
         </div>
-        <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
-            <label style="font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                <input type="checkbox" id="btnLocLanhDao" onchange="calendar.refetchEvents()" style="width: 18px; height: 18px;">
-                Chỉ hiển thị lịch họp của Trưởng / Phó TCS
-            </label>
-        </div>
+
+        <label class="filter-toggle-chip">
+            <input type="checkbox" id="btnLocLanhDao" onchange="calendar.refetchEvents()">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="toggle-label">Chỉ hiển thị lịch họp của Trưởng / Phó TCS</span>
+        </label>
+
         <div class="calendar-layout" style="display: block; width: 100%;">
             <div class="calendar-main" style="width: 100%;">
                 <div id='calendar'></div>
