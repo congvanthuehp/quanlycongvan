@@ -1418,3 +1418,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 
+
+// =====================================================================
+// ĐĂNG KÝ SERVICE WORKER CHO PWA (cho phép cài đặt app lên màn hình chính)
+// =====================================================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => console.log('PWA Service Worker đã hoạt động:', reg.scope))
+      .catch((err) => console.error('Lỗi đăng ký Service Worker:', err));
+  });
+}

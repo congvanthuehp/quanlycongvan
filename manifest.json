@@ -1,0 +1,32 @@
+{
+  "name": "Quản Lý Công Văn Nội Bộ",
+  "short_name": "Công Văn",
+  "description": "Ứng dụng quản lý công văn đến, hạn xử lý, lịch họp nội bộ.",
+  "start_url": "./quanlycongvan.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f7f6",
+  "theme_color": "#0056b3",
+  "lang": "vi",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

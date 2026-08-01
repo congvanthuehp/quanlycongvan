@@ -2,10 +2,20 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Web App Quản Lý Công Văn Nội Bộ</title>
-    
+
+    <!-- ===================== PWA: cài đặt được lên màn hình chính ===================== -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0056b3">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Công Văn">
+    <!-- =================================================================================== -->
+
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js" defer></script>
@@ -184,7 +194,7 @@
             box-shadow: none;
             background-color: #e9ecef;
         }
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; height: 100vh; box-sizing: border-box; overflow: hidden; }
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; height: 100vh; height: 100dvh; box-sizing: border-box; overflow: hidden; }
         
         .container { width: 100%; max-width: 100%; box-sizing: border-box; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: none; }
         
@@ -299,6 +309,40 @@
             #searchInput { width: 100%; }
             .table-container { max-height: calc(100vh - 240px);  }
             .date-range-group { width: 100%; justify-content: space-between; }
+
+            /* Header: xếp gọn theo chiều dọc, không bị tràn/chồng chữ */
+            .header-top { flex-direction: column; align-items: stretch !important; gap: 8px !important; }
+            .header-top > div { justify-content: space-between; width: 100%; }
+            #userInfo { font-size: 13px; }
+
+            /* Action bar: các nút xếp full-width, dễ bấm bằng ngón tay */
+            .action-bar { flex-direction: column; align-items: stretch; }
+            .action-bar button { width: 100%; padding: 12px; font-size: 14px; }
+
+            /* Tăng vùng chạm cho các nút chuyển chức năng / logout */
+            #btnChuyenLich, #btnChuyenCongVan, .btn-logout, #btnGuiThongBaoAdmin {
+                padding: 10px 14px !important; font-size: 13px !important;
+            }
+
+            /* Modal form công văn: chiếm gần trọn màn hình, dễ cuộn */
+            .modal-content { width: 94% !important; margin: 4% auto !important; padding: 15px !important; max-height: 90vh; overflow-y: auto; }
+            .form-grid { grid-template-columns: 1fr !important; gap: 10px; }
+            .row-2, .row-3 { grid-template-columns: 1fr !important; }
+
+            /* Chừa khoảng an toàn cho tai thỏ / thanh điều hướng iPhone */
+            body { padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); }
+            #loginScreen { margin: 60px auto; width: 90%; }
+
+            /* Gợi ý bảng có thể cuộn ngang bằng bóng mờ 2 bên */
+            .table-container { background:
+                linear-gradient(to right, white 30%, rgba(255,255,255,0)),
+                linear-gradient(to right, rgba(255,255,255,0), white 70%) 100% 0,
+                linear-gradient(to right, rgba(0,0,0,0.15), rgba(0,0,0,0)),
+                linear-gradient(to left, rgba(0,0,0,0.15), rgba(0,0,0,0)) 100% 0;
+                background-repeat: no-repeat;
+                background-size: 40px 100%, 40px 100%, 12px 100%, 12px 100%;
+                background-attachment: local, local, scroll, scroll;
+            }
         }
 
         button, .btn-add, .btn-excel { transition: all 0.3s ease; }
