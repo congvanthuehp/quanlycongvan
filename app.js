@@ -45,6 +45,11 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
+    // Khóa VAPID (Web Push certificate) lấy tại:
+    // Firebase Console → Project Settings → Cloud Messaging → Web configuration → Web Push certificates
+    // Phải điền khóa thật vào đây thì xin quyền + lấy token FCM mới hoạt động.
+    const VAPID_KEY_FCM = "DÁN_VAPID_KEY_CỦA_BẠN_VÀO_ĐÂY";
+
     let danhSachCongVan = [];
     let isAdmin = false; 
     let boLocHienTai = "Tất cả"; 
@@ -169,7 +174,9 @@
         }
     }
 
-    function dangXuat() {
+    async function dangXuat() {
+        let username = localStorage.getItem('cv_user');
+        await xoaPushTokenHienTai(username);
         auth.signOut().then(() => {
             localStorage.removeItem('cv_user');
             localStorage.removeItem('cv_role');
@@ -209,6 +216,7 @@
             
             document.getElementById('cotHanhDong').style.display = "table-cell";
             taiDuLieuTuFirebase();
+            khoiTaoPushNotification(username);
         } else {
             document.getElementById('loginScreen').style.display = "block";
             document.getElementById('mainApp').style.display = "none";
@@ -803,6 +811,86 @@
         }
     }
 
+
+// ==========================================
+// PUSH NOTIFICATION (FCM) - NHẬN THÔNG BÁO NGAY CẢ KHI KHÔNG MỞ APP
+// ==========================================
+// Cách hoạt động:
+// 1. Sau khi đăng nhập thành công, xin quyền thông báo trình duyệt và lấy
+//    "token" thiết bị từ Firebase Cloud Messaging (FCM), lưu vào
+//    fcm_tokens/{username}/{token} trên Realtime Database.
+// 2. Khi admin gửi thông báo mới (thucHienGuiThongBao ở dưới ghi vào
+//    'thong_bao_he_thong_danh_sach'), một Cloud Function (xem thư mục
+//    functions/) tự động chạy phía server, đọc toàn bộ fcm_tokens (trừ
+//    của chính admin gửi) và đẩy push notification tới từng thiết bị -
+//    kể cả khi trình duyệt/app đang đóng. Việc đẩy push BẮT BUỘC phải làm
+//    ở phía server (Cloud Function), vì trình duyệt của người gửi không
+//    còn "chạy" JS nào để tự gửi cho người khác khi họ đã tắt app.
+// 3. sw.js (service worker) nhận push lúc app đóng và hiển thị notification
+//    hệ điều hành; nếu app đang mở, onMessage() bên dưới hiển thị toast
+//    thay vì notification hệ điều hành (tránh gây phiền/trùng lặp).
+
+let fcmMessagingInstance = null;
+
+async function khoiTaoPushNotification(username) {
+    try {
+        if (!('serviceWorker' in navigator) || typeof firebase === 'undefined' || !firebase.messaging) {
+            return; // Trình duyệt không hỗ trợ
+        }
+        if (!(await firebase.messaging.isSupported())) return;
+
+        if (VAPID_KEY_FCM === "DÁN_VAPID_KEY_CỦA_BẠN_VÀO_ĐÂY" || !VAPID_KEY_FCM) {
+            console.warn("Chưa cấu hình VAPID_KEY_FCM - push notification sẽ không hoạt động.");
+            return;
+        }
+
+        if (Notification.permission === 'denied') return;
+
+        // Dùng chung service worker đã đăng ký cho PWA (sw.js) làm SW cho FCM
+        let swReg = await navigator.serviceWorker.ready;
+
+        let quyen = Notification.permission;
+        if (quyen === 'default') {
+            quyen = await Notification.requestPermission();
+        }
+        if (quyen !== 'granted') return;
+
+        fcmMessagingInstance = firebase.messaging();
+        let token = await fcmMessagingInstance.getToken({
+            vapidKey: VAPID_KEY_FCM,
+            serviceWorkerRegistration: swReg
+        });
+
+        if (token) {
+            await db.ref('fcm_tokens/' + username + '/' + token).set({
+                thoigian: Date.now(),
+                thietBi: (navigator.userAgent || '').slice(0, 200)
+            });
+        }
+
+        // Khi app đang mở (foreground), tự hiển thị toast thay vì để trình
+        // duyệt bắn native notification (tránh trùng lặp / gây giật mình).
+        fcmMessagingInstance.onMessage(payload => {
+            let noiDung = (payload.data && payload.data.body) || (payload.notification && payload.notification.body) || 'Bạn có thông báo mới';
+            showToast(noiDung, 'info');
+        });
+    } catch (err) {
+        console.error('Lỗi khởi tạo push notification:', err);
+    }
+}
+
+async function xoaPushTokenHienTai(username) {
+    try {
+        if (!fcmMessagingInstance || !username) return;
+        let token = await fcmMessagingInstance.getToken().catch(() => null);
+        if (token) {
+            await db.ref('fcm_tokens/' + username + '/' + token).remove().catch(() => {});
+            await fcmMessagingInstance.deleteToken().catch(() => {});
+        }
+    } catch (err) {
+        console.error('Lỗi xóa push token:', err);
+    }
+}
 
 // ==========================================
 // TÍNH NĂNG GỬI THÔNG BÁO THỜI GIAN THỰC

@@ -1,0 +1,88 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "cong_van": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$cvId": {
+        ".validate": "newData.hasChild('trichYeu')",
+        "trichYeu":   { ".validate": "newData.isString() && newData.val().length <= 3000" },
+        "ngayDen":    { ".validate": "newData.isString() && newData.val().length <= 20" },
+        "soDen":      { ".validate": "newData.isString() && newData.val().length <= 50" },
+        "coQuanGui":  { ".validate": "newData.isString() && newData.val().length <= 300" },
+        "soKyHieu":   { ".validate": "newData.isString() && newData.val().length <= 200" },
+        "ngayVB":     { ".validate": "newData.isString() && newData.val().length <= 20" },
+        "bpChuTri":   { ".validate": "newData.isString() && newData.val().length <= 300" },
+        "bpPhoiHop":  { ".validate": "newData.isString() && newData.val().length <= 300" },
+        "hanXuLy":    { ".validate": "newData.isString() && newData.val().length <= 20" },
+        "trangThai":  { ".validate": "newData.isString() && newData.val().length <= 100" },
+        "canhBao":    { ".validate": "newData.isString() && newData.val().length <= 100" },
+        "tuanBC":     { ".validate": "newData.isString() && newData.val().length <= 100" },
+        "lapLai":     { ".validate": "newData.isString() && newData.val().length <= 50" },
+        "ngayHoanThanh": { ".validate": "newData.isString() && newData.val().length <= 20" },
+        "lichSuSua": {
+          "$i": {
+            "user":          { ".validate": "newData.isString() && newData.val().length <= 100" },
+            "trangThai":     { ".validate": "newData.isString() && newData.val().length <= 100" },
+            "ngayHoanThanh": { ".validate": "newData.isString() && newData.val().length <= 20" },
+            "thoiGian":      { ".validate": "newData.isString() && newData.val().length <= 50" }
+          }
+        }
+      }
+    },
+
+    "lich_hop": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$lichId": {
+        ".validate": "newData.hasChildren(['tenCuocHop','ngayHop','gioBatDau','gioKetThuc'])",
+        "tenCuocHop":  { ".validate": "newData.isString() && newData.val().length <= 300" },
+        "loaiCuocHop": { ".validate": "newData.isString() && newData.val().length <= 20" },
+        "nguoiChuTri": { ".validate": "newData.isString() && newData.val().length <= 200" },
+        "phongHop":    { ".validate": "newData.isString() && newData.val().length <= 100" },
+        "ngayHop":     { ".validate": "newData.isString() && newData.val().length <= 20" },
+        "gioBatDau":   { ".validate": "newData.isString() && newData.val().length <= 10" },
+        "gioKetThuc":  { ".validate": "newData.isString() && newData.val().length <= 10" },
+        "noiDung":     { ".validate": "newData.isString() && newData.val().length <= 3000" },
+        "nguoiTao":    { ".validate": "newData.isString() && newData.val().length <= 100" },
+        "ngayTao":     { ".validate": "newData.isNumber()" },
+        "thanhPhan": {
+          "$i": { ".validate": "newData.isString() && newData.val().length <= 200" }
+        }
+      }
+    },
+
+    "thong_bao_he_thong_danh_sach": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$tbId": {
+        ".validate": "newData.hasChildren(['noidung','nguoigui','thoigian'])",
+        "noidung":  { ".validate": "newData.isString() && newData.val().length <= 2000" },
+        "nguoigui": { ".validate": "newData.isString() && newData.val().length <= 100" },
+        "thoigian": { ".validate": "newData.isNumber()" }
+      }
+    },
+
+    "thong_bao_da_doc": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$tbId": {
+        "$user": { ".validate": "newData.isNumber()" }
+      }
+    },
+
+    "fcm_tokens": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$username": {
+        "$token": {
+          ".validate": "newData.hasChildren(['thoigian']) && newData.child('thoigian').isNumber()",
+          "thoigian": { ".validate": "newData.isNumber()" },
+          "thietBi":  { ".validate": "newData.isString() && newData.val().length <= 200" }
+        }
+      }
+    }
+  }
+}

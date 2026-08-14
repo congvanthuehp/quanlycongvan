@@ -13,6 +13,56 @@ const APP_SHELL = [
   './icons/icon-512.png'
 ];
 
+// =====================================================================
+// PUSH NOTIFICATION (FCM) — chạy được cả khi app/tab đang đóng.
+// Dùng chung service worker này (thay vì 1 file firebase-messaging-sw.js
+// riêng) vì trình duyệt chỉ cho 1 service worker hoạt động ở scope gốc "/"
+// tại 1 thời điểm — đăng ký 2 file SW riêng ở cùng scope sẽ ghi đè nhau.
+// =====================================================================
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
+
+firebase.initializeApp({
+  apiKey: "AIzaSyCi3UUhmd_D2GvzIPY-pHnPCx4fSVGxI68",
+  authDomain: "quanlycongvan-b89b3.firebaseapp.com",
+  databaseURL: "https://quanlycongvan-b89b3-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "quanlycongvan-b89b3",
+  storageBucket: "quanlycongvan-b89b3.firebasestorage.app",
+  messagingSenderId: "914250159888",
+  appId: "1:914250159888:web:f770882f6afa01e5b1f795"
+});
+
+const messaging = firebase.messaging();
+
+// Cloud Function gửi message dạng "data-only" (không có key "notification")
+// để ta tự kiểm soát nội dung/hành vi hiển thị thay vì để trình duyệt tự vẽ.
+messaging.setBackgroundMessageHandler(payload => {
+  let data = payload.data || {};
+  let tieuDe = data.title || 'Công Văn Nội Bộ';
+  let noiDung = data.body || 'Bạn có thông báo mới';
+
+  return self.registration.showNotification(tieuDe, {
+    body: noiDung,
+    icon: './icons/icon-192.png',
+    badge: './icons/icon-192.png',
+    tag: 'thong-bao-he-thong',
+    data: { url: './index.html' }
+  });
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  let url = (event.notification.data && event.notification.data.url) || './index.html';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
+        if (client.url.includes('index.html') && 'focus' in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(url);
+    })
+  );
+});
+
 // Cài đặt: lưu trước các file khung giao diện
 self.addEventListener('install', event => {
   event.waitUntil(
