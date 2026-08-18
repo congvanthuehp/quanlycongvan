@@ -1291,10 +1291,6 @@ label { color: var(--ink); }
         <div class="header-top" style="padding: 10px 15px; background: #eee; border-bottom: 2px solid #ccc; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                 <span id="userInfo" style="font-weight: bold; color: #0056b3; text-transform: uppercase;">Xin chào: </span>
-
-                <!-- ĐÃ ĐƯA NÚT PHÁT THÔNG BÁO VÀO ĐÂY, NGAY TRÊN HEADER ĐỂ DỄ NHÌN THẤY NHẤT -->
-                <button id="btnGuiThongBaoAdmin" onclick="moFormThongBao()" class="btn-icon-header btn-icon-header-solid" style="display: none;" title="Phát thông báo">📢</button>
-                <button id="btnChuyenLich" onclick="toggleChucNang('LICH')" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">📅 Xem Lịch Họp</button>
             </div>
 
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -1313,6 +1309,12 @@ label { color: var(--ink); }
                     <span id="iconChuong">🔔</span> <span id="badgeThongBao" class="badge-notif">0</span>
                 </button>
                 <button class="btn-theme-toggle" id="btnThemeToggle" onclick="toggleDarkMode()" title="Chuyển giao diện sáng/tối">🌙</button>
+
+                <span class="header-divider"></span>
+
+                <!-- ĐÃ CHUYỂN NÚT PHÁT THÔNG BÁO VÀ XEM LỊCH HỌP XUỐNG ĐÂY, CÙNG HÀNG VỚI ĐĂNG XUẤT -->
+                <button id="btnGuiThongBaoAdmin" onclick="moFormThongBao()" class="btn-icon-header btn-icon-header-solid" style="display: none;" title="Phát thông báo">📢</button>
+                <button id="btnChuyenLich" onclick="toggleChucNang('LICH')" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">📅 Xem Lịch Họp</button>
 
                 <span class="header-divider"></span>
 
@@ -1406,8 +1408,9 @@ label { color: var(--ink); }
 
     <!-- 5. CÁC MODAL HỆ THỐNG -->
     <div id="modalForm" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="dongForm()">&times;</span>
+        <div class="modal-content" id="modalFormContent">
+            <div style="width: 40px; height: 5px; background: #ccc; border-radius: 3px; margin: -10px auto 10px auto;" title="Vuốt xuống để đóng"></div>
+            <span class="close-btn" id="modalFormCloseBtn" onclick="dongForm()" style="left: 15px; right: auto;">&times;</span>
             <h3 id="formTitle" style="margin-top: 0; text-align: center;">NHẬP CÔNG VĂN MỚI</h3>
             <input type="hidden" id="cvId"> 
             

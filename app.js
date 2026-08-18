@@ -811,6 +811,57 @@
         }
     }
 
+    // ==========================================
+    // VUỐT XUỐNG ĐỂ ĐÓNG FORM NHẬP CÔNG VĂN MỚI (hỗ trợ thao tác trên iPhone)
+    // ==========================================
+    (function khoiTaoVuotDeDongForm() {
+        let noiDung = document.getElementById("modalFormContent");
+        if (!noiDung) return;
+
+        let yBatDau = 0;
+        let yHienTai = 0;
+        let dangKeo = false;
+
+        noiDung.addEventListener("touchstart", function (e) {
+            // Chỉ bắt đầu vuốt khi đang ở đầu form (tránh xung đột với cuộn nội dung)
+            if (noiDung.scrollTop > 0) return;
+            yBatDau = e.touches[0].clientY;
+            dangKeo = true;
+            noiDung.style.transition = "none";
+        }, { passive: true });
+
+        noiDung.addEventListener("touchmove", function (e) {
+            if (!dangKeo) return;
+            yHienTai = e.touches[0].clientY;
+            let khoangCach = yHienTai - yBatDau;
+            if (khoangCach > 0) {
+                noiDung.style.transform = "translateY(" + khoangCach + "px)";
+            }
+        }, { passive: true });
+
+        noiDung.addEventListener("touchend", function () {
+            if (!dangKeo) return;
+            dangKeo = false;
+            let khoangCach = yHienTai - yBatDau;
+            noiDung.style.transition = "transform 0.2s ease";
+
+            if (khoangCach > 100) {
+                // Vuốt xuống đủ xa -> đóng form
+                noiDung.style.transform = "translateY(100%)";
+                setTimeout(function () {
+                    dongForm();
+                    noiDung.style.transition = "none";
+                    noiDung.style.transform = "";
+                }, 200);
+            } else {
+                // Vuốt chưa đủ -> trả về vị trí cũ
+                noiDung.style.transform = "translateY(0)";
+            }
+            yBatDau = 0;
+            yHienTai = 0;
+        });
+    })();
+
 
 // ==========================================
 // PUSH NOTIFICATION (FCM) - NHẬN THÔNG BÁO NGAY CẢ KHI KHÔNG MỞ APP
