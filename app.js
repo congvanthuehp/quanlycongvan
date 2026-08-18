@@ -1156,8 +1156,21 @@ window.addEventListener('DOMContentLoaded', () => {
 // ==========================================================================
 // 2. ĐIỀU KHIỂN CHUYỂN ĐỔI GIAO DIỆN (TOGGLE CHỨC NĂNG)
 // ==========================================================================
-let calendar;
-let isCalendarInit = false;
+// Dùng `var` (KHÔNG dùng `let`) cho biến này: index.html có handler nội tuyến
+// tham chiếu tới lịch (ô lọc "Chỉ hiển thị lịch họp của Trưởng / Phó TCS").
+// Khai báo bằng `let` chỉ nằm trong global declarative record, KHÔNG gắn lên
+// window, nên nếu app.js ném lỗi ở trên (VD: SDK Firebase tải hỏng) thì biến
+// không bao giờ được tạo và handler nội tuyến báo "calendar is not defined" -
+// che mất lỗi thật. `var` luôn gắn lên window và không có vùng chết (TDZ).
+var calendar;
+var isCalendarInit = false;
+
+// Ô lọc lịch lãnh đạo gọi hàm này thay vì gọi thẳng calendar.refetchEvents():
+// khai báo hàm luôn được hoisted lên window nên handler nội tuyến luôn tìm thấy,
+// và có kiểm tra null để không ném lỗi khi lịch chưa khởi tạo xong.
+function locLichLanhDaoThayDoi() {
+    if (calendar) calendar.refetchEvents();
+}
 
 function toggleChucNang(chucNang) {
     if (chucNang === 'LICH') {
@@ -1378,12 +1391,17 @@ function initCalendar() {
             moModalDatLich(info.dateStr); 
         },
         windowResize: function(arg) {
-            // Tự động điều chỉnh khi xoay ngang/dọc điện thoại
-            if (window.innerWidth < 768) {
-                calendar.changeView('listMonth');
-            } else {
-                calendar.changeView('dayGridMonth');
-            }
+            // Tự động điều chỉnh khi xoay ngang/dọc điện thoại.
+            // PHẢI cập nhật cả contentHeight chứ không chỉ đổi view: contentHeight
+            // vốn được chốt một lần lúc khởi tạo theo bề rộng màn hình lúc đó. Nếu
+            // mở ở màn hình rộng (contentHeight = 650) rồi thu nhỏ xuống cỡ điện
+            // thoại, FullCalendar vẫn ở chế độ "liquid" (chiều cao cố định, view
+            // bên trong position:absolute) khiến chế độ xem "Danh sách" hiển thị
+            // sai. Đồng bộ lại để mobile luôn dùng 'auto' - danh sách tự giãn theo
+            // số cuộc họp và hiện đủ khối chi tiết.
+            let mobile = window.innerWidth < 768;
+            calendar.setOption('contentHeight', mobile ? 'auto' : 650);
+            calendar.changeView(mobile ? 'listMonth' : 'dayGridMonth');
         }
     });
     

@@ -4,7 +4,7 @@
 // Dữ liệu công văn luôn lấy trực tiếp từ Firebase (online), KHÔNG cache
 // để tránh hiển thị dữ liệu cũ/sai.
 // =====================================================================
-const CACHE_NAME = 'quanlycongvan-cache-v1';
+const CACHE_NAME = 'quanlycongvan-cache-v2';
 const APP_SHELL = [
   './index.html',
   './app.js',
@@ -63,11 +63,23 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
-// Cài đặt: lưu trước các file khung giao diện
+// Cài đặt: lưu trước các file khung giao diện.
+// LƯU Ý QUAN TRỌNG: KHÔNG dùng cache.addAll() ở đây. addAll() có tính "tất cả
+// hoặc không" — chỉ cần 1 file trong APP_SHELL trả về 404 là cả promise bị
+// reject, khiến install thất bại, skipWaiting() không chạy và service worker
+// MỚI KHÔNG BAO GIỜ ĐƯỢC KÍCH HOẠT. Khi đó service worker cũ vẫn tiếp tục điều
+// khiển trang và phục vụ bản index.html/app.js cũ — mọi thay đổi code đều như
+// không có tác dụng. Cache từng file riêng lẻ để 1 file thiếu không giết cả SW.
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL))
+      .then(cache => Promise.all(
+        APP_SHELL.map(file =>
+          cache.add(file).catch(err =>
+            console.warn('[SW] Bỏ qua file không cache được:', file, err)
+          )
+        )
+      ))
       .then(() => self.skipWaiting())
   );
 });
@@ -81,24 +93,45 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch: Network-first cho mọi request — luôn ưu tiên lấy bản mới nhất từ
+// Fetch: Network-first cho file cùng origin — luôn ưu tiên lấy bản mới nhất từ
 // mạng (đặc biệt quan trọng vì app.js hay được cập nhật); chỉ dùng cache
 // làm phương án dự phòng khi mất mạng.
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  let url;
+  try {
+    url = new URL(req.url);
+  } catch (e) {
+    return; // URL lạ - để trình duyệt tự xử lý
+  }
+
+  // TUYỆT ĐỐI KHÔNG đụng vào request cross-origin (SDK Firebase, FullCalendar,
+  // SheetJS trên CDN, kết nối realtime của Firebase Database, Google Fonts...).
+  // Nếu ta gọi respondWith() cho chúng mà mạng trục trặc, caches.match() trả về
+  // undefined -> respondWith(undefined) làm request HỎNG HẲN. Khi đó SDK Firebase
+  // không tải được, app.js ném lỗi ngay tại firebase.initializeApp() và TOÀN BỘ
+  // code phía sau ngừng chạy (biến `calendar` không được tạo -> lịch họp trắng
+  // và onchange của ô lọc báo "calendar is not defined").
+  if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    fetch(event.request)
+    fetch(req)
       .then(response => {
-        // Chỉ cache lại các file thuộc app shell, bỏ qua Firebase/API
-        const url = event.request.url;
-        const isShellFile = APP_SHELL.some(f => url.includes(f.replace('./', '')));
+        // Chỉ cache lại các file thuộc app shell
+        const isShellFile = APP_SHELL.some(f => url.pathname.endsWith(f.replace('./', '')));
         if (isShellFile && response && response.status === 200) {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
         }
         return response;
       })
-      .catch(() => caches.match(event.request))
+      // Mất mạng: dùng cache nếu có. LUÔN phải trả về một Response hợp lệ -
+      // không bao giờ để undefined lọt vào respondWith().
+      .catch(() => caches.match(req).then(hit => hit || new Response(
+        'Ngoại tuyến - không có bản lưu trong bộ nhớ đệm.',
+        { status: 503, statusText: 'Offline', headers: { 'Content-Type': 'text/plain; charset=utf-8' } }
+      )))
   );
 });
