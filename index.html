@@ -1409,8 +1409,10 @@ label { color: var(--ink); }
     <!-- 5. CÁC MODAL HỆ THỐNG -->
     <div id="modalForm" class="modal">
         <div class="modal-content" id="modalFormContent">
-            <div style="width: 40px; height: 5px; background: #ccc; border-radius: 3px; margin: -10px auto 10px auto;" title="Vuốt xuống để đóng"></div>
-            <span class="close-btn" id="modalFormCloseBtn" onclick="dongForm()" style="left: 15px; right: auto;">&times;</span>
+            <div style="width: 40px; height: 5px; background: #ccc; border-radius: 3px; margin: -10px auto 10px auto;" title="Vuốt ngang để đóng"></div>
+            <div style="position: sticky; top: 8px; height: 0; z-index: 20;">
+                <span class="close-btn" id="modalFormCloseBtn" onclick="dongForm()" style="position: absolute; left: 8px; right: auto; top: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.08); border-radius: 50%; font-size: 26px; line-height: 1;">&times;</span>
+            </div>
             <h3 id="formTitle" style="margin-top: 0; text-align: center;">NHẬP CÔNG VĂN MỚI</h3>
             <input type="hidden" id="cvId"> 
             

@@ -812,42 +812,58 @@
     }
 
     // ==========================================
-    // VUỐT XUỐNG ĐỂ ĐÓNG FORM NHẬP CÔNG VĂN MỚI (hỗ trợ thao tác trên iPhone)
+    // VUỐT NGANG (TRÁI/PHẢI) ĐỂ ĐÓNG FORM NHẬP CÔNG VĂN MỚI (hỗ trợ thao tác trên iPhone)
+    // Dùng vuốt ngang thay vì vuốt dọc để không xung đột với thao tác cuộn (scroll) form
     // ==========================================
     (function khoiTaoVuotDeDongForm() {
         let noiDung = document.getElementById("modalFormContent");
         if (!noiDung) return;
 
-        let yBatDau = 0;
-        let yHienTai = 0;
-        let dangKeo = false;
+        let xBatDau = 0, yBatDau = 0;
+        let xHienTai = 0;
+        let dangKeoNgang = false; // true khi đã xác định đây là cử chỉ vuốt ngang
+        let daXacDinhHuong = false; // đã xác định hướng vuốt (ngang hay dọc) hay chưa
 
         noiDung.addEventListener("touchstart", function (e) {
-            // Chỉ bắt đầu vuốt khi đang ở đầu form (tránh xung đột với cuộn nội dung)
-            if (noiDung.scrollTop > 0) return;
+            xBatDau = e.touches[0].clientX;
             yBatDau = e.touches[0].clientY;
-            dangKeo = true;
+            xHienTai = xBatDau;
+            dangKeoNgang = false;
+            daXacDinhHuong = false;
             noiDung.style.transition = "none";
         }, { passive: true });
 
         noiDung.addEventListener("touchmove", function (e) {
-            if (!dangKeo) return;
-            yHienTai = e.touches[0].clientY;
-            let khoangCach = yHienTai - yBatDau;
-            if (khoangCach > 0) {
-                noiDung.style.transform = "translateY(" + khoangCach + "px)";
+            let xNow = e.touches[0].clientX;
+            let yNow = e.touches[0].clientY;
+            let dx = xNow - xBatDau;
+            let dy = yNow - yBatDau;
+
+            if (!daXacDinhHuong) {
+                // Chỉ xác định hướng khi đã di chuyển đủ xa để tránh nhầm với chạm nhẹ
+                if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+                daXacDinhHuong = true;
+                // Chỉ coi là vuốt ngang nếu độ lệch ngang lớn hơn rõ rệt so với dọc
+                dangKeoNgang = Math.abs(dx) > Math.abs(dy) * 1.5;
+            }
+
+            if (dangKeoNgang) {
+                xHienTai = xNow;
+                noiDung.style.transform = "translateX(" + dx + "px)";
             }
         }, { passive: true });
 
         noiDung.addEventListener("touchend", function () {
-            if (!dangKeo) return;
-            dangKeo = false;
-            let khoangCach = yHienTai - yBatDau;
+            if (!dangKeoNgang) {
+                daXacDinhHuong = false;
+                return;
+            }
+            let dx = xHienTai - xBatDau;
             noiDung.style.transition = "transform 0.2s ease";
 
-            if (khoangCach > 100) {
-                // Vuốt xuống đủ xa -> đóng form
-                noiDung.style.transform = "translateY(100%)";
+            if (Math.abs(dx) > 100) {
+                // Vuốt ngang đủ xa -> đóng form, trượt tiếp theo hướng đang vuốt
+                noiDung.style.transform = "translateX(" + (dx > 0 ? "100%" : "-100%") + ")";
                 setTimeout(function () {
                     dongForm();
                     noiDung.style.transition = "none";
@@ -855,10 +871,10 @@
                 }, 200);
             } else {
                 // Vuốt chưa đủ -> trả về vị trí cũ
-                noiDung.style.transform = "translateY(0)";
+                noiDung.style.transform = "translateX(0)";
             }
-            yBatDau = 0;
-            yHienTai = 0;
+            dangKeoNgang = false;
+            daXacDinhHuong = false;
         });
     })();
 
