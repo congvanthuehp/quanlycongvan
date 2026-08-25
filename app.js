@@ -48,7 +48,7 @@
     // Khóa VAPID (Web Push certificate) lấy tại:
     // Firebase Console → Project Settings → Cloud Messaging → Web configuration → Web Push certificates
     // Phải điền khóa thật vào đây thì xin quyền + lấy token FCM mới hoạt động.
-    const VAPID_KEY_FCM = "DÁN_VAPID_KEY_CỦA_BẠN_VÀO_ĐÂY";
+    const VAPID_KEY_FCM = "BNbpU-Ux3HTIY2qjk1wz7-SryQx-8sNwoxuNeJd9NHgi-gQWDAHnIQC8qxNrC1DX3QGWCLV4E9OvjcJJ07NpJrE";
 
     let danhSachCongVan = [];
     let isAdmin = false; 
@@ -216,6 +216,10 @@
             
             document.getElementById('cotHanhDong').style.display = "table-cell";
             taiDuLieuTuFirebase();
+            // Chỉ đăng ký các listener này SAU khi đã có session Firebase, vì
+            // Rules yêu cầu auth != null (xem chú thích ở khoiTaoLangNgheThongBao).
+            khoiTaoLangNgheThongBao();
+            khoiTaoLangNgheLichHop();
             khoiTaoPushNotification(username);
         } else {
             document.getElementById('loginScreen').style.display = "block";
@@ -1027,7 +1031,21 @@ function moLichSuThongBao() {
     document.getElementById('modalLichSuThongBao').style.display = 'none';
 }
 // 4. Lắng nghe dữ liệu Danh sách Thông báo
-// Lắng nghe dữ liệu Thông báo và trạng thái Đã đọc từ Firebase
+//
+// QUAN TRỌNG - PHẢI đăng ký listener SAU KHI ĐĂNG NHẬP, tuyệt đối không đặt ở
+// cấp cao nhất của file. Rules của Realtime Database yêu cầu auth != null. Nếu
+// gọi .on() ngay lúc tải trang (lúc đó chưa đăng nhập, chưa có session ẩn danh)
+// thì Firebase trả về PERMISSION_DENIED và HỦY LUÔN listener đó - nó KHÔNG tự
+// gắn lại sau khi đăng nhập xong. Hậu quả: chuông không kêu, badge không lên số,
+// bảng thông báo luôn trống suốt cả phiên làm việc, mà không hề có lỗi nào hiện
+// ra màn hình. Đây đúng là mô hình mà taiDuLieuTuFirebase() (nhánh cong_van) đã
+// làm đúng: chỉ gọi từ trong onAuthStateChanged.
+let daDangKyLangNgheThongBao = false;
+
+function khoiTaoLangNgheThongBao() {
+    if (daDangKyLangNgheThongBao) return; // tránh đăng ký trùng khi auth đổi trạng thái
+    daDangKyLangNgheThongBao = true;
+
 db.ref('thong_bao_he_thong_danh_sach').on('value', snap => {
     danhSachThongBaoToanHeThong = [];
     let currentUser = localStorage.getItem('cv_user') || 'Anonym';
@@ -1078,7 +1096,13 @@ db.ref('thong_bao_he_thong_danh_sach').on('value', snap => {
     } else {
         renderBangThongBao();
     }
+}, err => {
+    // Trước đây .on() không truyền callback lỗi nên mọi thất bại đều im lặng.
+    // Ghi rõ ra console, và mở cờ để lần đăng nhập kế tiếp được đăng ký lại.
+    daDangKyLangNgheThongBao = false;
+    console.error('Không đọc được danh sách thông báo (kiểm tra Rules / trạng thái đăng nhập):', err);
 });
+}
     // 6. Hàm hiển thị danh sách thông báo vào Modal (Có thêm nút Xóa cho Admin)
 // Hàm hiển thị danh sách thông báo vào Modal (Hiển thị thêm danh sách người đã đọc cho Admin)
 function renderBangThongBao() {
@@ -1420,10 +1444,21 @@ function initCalendar() {
 
 // Cờ đánh dấu để tránh việc load lại toàn bộ dữ liệu cũ lúc ban đầu rồi hiển thị thông báo dồn dập
 let daLoadXongDuLieuBanDau = false;
+let daDangKyLangNgheLichHop = false;
+
+// Cùng lý do với khoiTaoLangNgheThongBao() ở trên: hai listener dưới đây cũng
+// đọc dữ liệu cần auth != null, nên phải đăng ký sau khi đăng nhập chứ không
+// chạy thẳng lúc tải file, nếu không sẽ bị PERMISSION_DENIED rồi hủy im lặng.
+function khoiTaoLangNgheLichHop() {
+    if (daDangKyLangNgheLichHop) return;
+    daDangKyLangNgheLichHop = true;
 
 // 1. Chờ lấy toàn bộ dữ liệu cũ lần đầu tiên xong xuôi
 db.ref('lich_hop').once('value').then(() => {
     daLoadXongDuLieuBanDau = true;
+}).catch(err => {
+    daDangKyLangNgheLichHop = false;
+    console.error('Không đọc được lịch họp:', err);
 });
 
 // 2. Lắng nghe sự kiện THÊM MỚI cuộc họp trong thời gian thực
@@ -1445,7 +1480,11 @@ db.ref('lich_hop').on('child_added', (snapshot) => {
         localStorage.setItem('so_lich_moi_chua_xem', currentCounts + 1);
         if (typeof capNhatBadgeGiaoDien === 'function') capNhatBadgeGiaoDien();
     }
+}, err => {
+    daDangKyLangNgheLichHop = false;
+    console.error('Không lắng nghe được lịch họp mới:', err);
 });
+}
 
 // ==========================================================================
 // 4. QUẢN LÝ BIỂU MẪU ĐẶT LỊCH (MODAL ACTIONS & LOGIC VALIDATE)
