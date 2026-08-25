@@ -808,12 +808,22 @@
         if(modal) modal.style.display = "none";
     }
 
-    window.onclick = function(event) {
+    // Dùng addEventListener thay vì gán window.onclick =, vì 2 lý do:
+    // 1. Phía cuối file còn một chỗ gán window.onclick nữa - gán trực tiếp thì
+    //    cái sau GHI ĐÈ cái trước, làm form công văn mất khả năng bấm ra nền
+    //    đen để đóng.
+    // 2. Kết thúc bằng "});" loại bỏ hẳn cái bẫy thiếu dấu chấm phẩy: trước
+    //    đây khối này kết thúc bằng "}" trần và đứng ngay trước một IIFE mở
+    //    bằng "(", nên JavaScript nối liền thành MỘT câu lệnh gọi hàm ->
+    //    "TypeError: (intermediate value)(...) is not a function" và làm CHẾT
+    //    toàn bộ phần còn lại của file (mọi let/const sau đó kẹt trong TDZ:
+    //    fcmMessagingInstance, danhSachThongBaoToanHeThong, ...).
+    window.addEventListener('click', function(event) {
         let modal = document.getElementById("modalForm");
         if (event.target === modal) {
             dongForm();
         }
-    }
+    });
 
     // ==========================================
     // VUỐT NGANG (TRÁI/PHẢI) ĐỂ ĐÓNG FORM NHẬP CÔNG VĂN MỚI (hỗ trợ thao tác trên iPhone)
@@ -1707,13 +1717,15 @@ function dongModalChiTiet() {
     document.getElementById('modalChiTietHop').style.display = 'none';
 }
 
-// Xử lý đóng modal khi click ra ngoài nền đen (Bổ sung vào event có sẵn nếu bạn đã có hàm window.onclick)
-window.onclick = function(event) {
+// Xử lý đóng modal khi click ra ngoài nền đen.
+// Dùng addEventListener chứ KHÔNG gán window.onclick =: phía trên file đã có
+// một handler click khác (đóng form công văn); gán trực tiếp sẽ ghi đè mất nó.
+window.addEventListener('click', function(event) {
     let modalDatLich = document.getElementById('modalDatLichHop');
     let modalChiTiet = document.getElementById('modalChiTietHop');
     if (event.target === modalDatLich) dongModalDatLich();
     if (event.target === modalChiTiet) dongModalChiTiet();
-}
+});
 
 
 // 1. Cập nhật giao diện hiển thị Badge dựa trên số lượng lưu trữ
