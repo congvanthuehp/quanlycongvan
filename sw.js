@@ -4,7 +4,9 @@
 // Dữ liệu công văn luôn lấy trực tiếp từ Firebase (online), KHÔNG cache
 // để tránh hiển thị dữ liệu cũ/sai.
 // =====================================================================
-const CACHE_NAME = 'quanlycongvan-cache-v2';
+// Tăng số này MỖI LẦN sửa index.html / app.js. Handler 'activate' dùng nó để
+// xóa sạch cache của phiên bản cũ, tránh trình duyệt phục vụ lại bản cũ.
+const CACHE_NAME = 'quanlycongvan-cache-v4';
 const APP_SHELL = [
   './index.html',
   './app.js',
@@ -19,36 +21,44 @@ const APP_SHELL = [
 // riêng) vì trình duyệt chỉ cho 1 service worker hoạt động ở scope gốc "/"
 // tại 1 thời điểm — đăng ký 2 file SW riêng ở cùng scope sẽ ghi đè nhau.
 // =====================================================================
-importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
-importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
+// Bọc trong try/catch: nếu importScripts tải SDK từ CDN thất bại (mất mạng lúc
+// cài, CDN bị chặn...) mà không bắt lỗi thì TOÀN BỘ service worker hỏng theo -
+// mất luôn cả phần cache app shell chứ không riêng gì push. Bắt lỗi ở đây để
+// push hỏng thì chỉ mất push, app vẫn cài và chạy offline bình thường.
+try {
+  importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
+  importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
-firebase.initializeApp({
-  apiKey: "AIzaSyCi3UUhmd_D2GvzIPY-pHnPCx4fSVGxI68",
-  authDomain: "quanlycongvan-b89b3.firebaseapp.com",
-  databaseURL: "https://quanlycongvan-b89b3-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "quanlycongvan-b89b3",
-  storageBucket: "quanlycongvan-b89b3.firebasestorage.app",
-  messagingSenderId: "914250159888",
-  appId: "1:914250159888:web:f770882f6afa01e5b1f795"
-});
-
-const messaging = firebase.messaging();
-
-// Cloud Function gửi message dạng "data-only" (không có key "notification")
-// để ta tự kiểm soát nội dung/hành vi hiển thị thay vì để trình duyệt tự vẽ.
-messaging.setBackgroundMessageHandler(payload => {
-  let data = payload.data || {};
-  let tieuDe = data.title || 'Công Văn Nội Bộ';
-  let noiDung = data.body || 'Bạn có thông báo mới';
-
-  return self.registration.showNotification(tieuDe, {
-    body: noiDung,
-    icon: './icons/icon-192.png',
-    badge: './icons/icon-192.png',
-    tag: 'thong-bao-he-thong',
-    data: { url: './index.html' }
+  firebase.initializeApp({
+    apiKey: "AIzaSyCi3UUhmd_D2GvzIPY-pHnPCx4fSVGxI68",
+    authDomain: "quanlycongvan-b89b3.firebaseapp.com",
+    databaseURL: "https://quanlycongvan-b89b3-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "quanlycongvan-b89b3",
+    storageBucket: "quanlycongvan-b89b3.firebasestorage.app",
+    messagingSenderId: "914250159888",
+    appId: "1:914250159888:web:f770882f6afa01e5b1f795"
   });
-});
+
+  const messaging = firebase.messaging();
+
+  // Cloud Function gửi message dạng "data-only" (không có key "notification")
+  // để ta tự kiểm soát nội dung/hành vi hiển thị thay vì để trình duyệt tự vẽ.
+  messaging.setBackgroundMessageHandler(payload => {
+    let data = payload.data || {};
+    let tieuDe = data.title || 'Công Văn Nội Bộ';
+    let noiDung = data.body || 'Bạn có thông báo mới';
+
+    return self.registration.showNotification(tieuDe, {
+      body: noiDung,
+      icon: './icons/icon-192.png',
+      badge: './icons/icon-192.png',
+      tag: 'thong-bao-he-thong',
+      data: { url: './index.html' }
+    });
+  });
+} catch (err) {
+  console.warn('[SW] Không khởi tạo được FCM, service worker vẫn chạy phần cache:', err);
+}
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();

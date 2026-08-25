@@ -1,4 +1,14 @@
     // =====================================================================
+    // DẤU HIỆU PHIÊN BẢN — đổi chuỗi này mỗi lần sửa file, để mở Console là
+    // biết ngay trình duyệt đang chạy bản mới hay bản cũ còn kẹt trong cache
+    // (service worker / CDN / chưa upload lên hosting). Không có nó thì rất
+    // dễ mất thời gian sửa một lỗi đã sửa rồi mà chỉ là trình duyệt chưa nhận.
+    // =====================================================================
+    const PHIEN_BAN_APP = '2026-08-25-b';
+    console.log('%c[Công Văn] app.js phiên bản: ' + PHIEN_BAN_APP,
+                'background:#0056b3;color:#fff;padding:2px 6px;border-radius:3px');
+
+    // =====================================================================
     // CHẾ ĐỘ SÁNG/TỐI (Dark mode) — áp dụng ngay khi script chạy để tránh
     // nháy sáng trước khi CSS override kịp đọc lựa chọn đã lưu của người dùng.
     // =====================================================================

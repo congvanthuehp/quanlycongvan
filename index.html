@@ -1201,6 +1201,94 @@ label { color: var(--ink); }
 .confirm-actions .btn-luu { background: var(--brand); color: #fff; }
 .confirm-actions .btn-confirm-danger { background: var(--danger); color: #fff; }
 .confirm-actions button:hover { filter: brightness(1.08); }
+
+/* ==========================================================================
+   VÙNG AN TOÀN (SAFE AREA) — iPhone tai thỏ / Dynamic Island
+   --------------------------------------------------------------------------
+   Trang bật viewport-fit=cover (thẻ meta dòng 5) nên nội dung tràn sát mép
+   màn hình, kể cả vùng tai thỏ và thanh gạt home. Không chừa khoảng thì thanh
+   tiêu đề của modal (kèm nút X) chui xuống dưới tai thỏ và KHÔNG BẤM ĐƯỢC.
+
+   Khối này đặt ở CUỐI thẻ <style> để chắc chắn thắng các rule padding phía
+   trên - đặc biệt là "html, body { padding: 0 }" vốn đang vô hiệu hóa cả
+   phần safe-area trái/phải khai báo ở media query phía trên.
+   ========================================================================== */
+
+/* 1. TOÀN BỘ TRANG — đẩy nội dung (header, bảng công văn, màn đăng nhập)
+      xuống dưới tai thỏ. body có box-sizing:border-box + height:100dvh nên
+      padding này làm vùng nội dung thấp xuống VÀ ngắn lại tương ứng, không
+      đẩy phần dưới ra ngoài màn hình. */
+body {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* 2. LỚP PHỦ MODAL — đều là position:fixed nên KHÔNG nhận padding của body,
+      phải tự chừa vùng an toàn. Áp cho cả modal công văn / chi tiết họp
+      (.modal) lẫn 2 bảng thông báo (.modal-thongbao-list). */
+.modal,
+.modal-thongbao-list {
+    box-sizing: border-box;
+    overflow-y: auto;
+    padding-top: max(14px, calc(env(safe-area-inset-top, 0px) + 10px));
+    padding-bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) + 10px));
+}
+
+/* Bỏ margin dọc cũ (5%/4% auto): khoảng cách trên - dưới giờ do padding vùng
+   an toàn của lớp phủ lo, để hai thứ không cộng dồn thành khoảng trống quá lớn.
+   Dùng selector 2 cấp để thắng các rule .modal-content { margin: ... !important }. */
+.modal .modal-content,
+.modal-thongbao-list .modal-thongbao-content {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+/* 3. BẢNG THÔNG BÁO — giới hạn theo chiều cao màn hình thật thay vì 400px cứng,
+      để máy nhỏ vẫn cuộn hết danh sách mà không tràn khỏi vùng an toàn.
+      Trừ đi ~120px cho thanh tiêu đề xanh và phần padding của lớp phủ. */
+.modal-body-tb {
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px)
+                            - env(safe-area-inset-bottom, 0px) - 120px);
+}
+
+/* 4. FORM ĐẶT LỊCH HỌP — khung này căn giữa bằng position:absolute + transform
+      nên padding của lớp phủ KHÔNG tác động tới nó (containing block của phần
+      tử absolute là padding-box, vốn vẫn cao đủ 100vh). Vì vậy phải tự dời tâm
+      xuống theo chênh lệch giữa safe-area trên và dưới, đồng thời chặn chiều
+      cao để đỉnh form không bao giờ chạm tai thỏ. */
+#modalDatLichHop .modal-content {
+    top: calc(50% + (env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) / 2) !important;
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px)
+                            - env(safe-area-inset-bottom, 0px) - 28px) !important;
+    overflow-y: auto !important;
+}
+
+/* 5. BẢNG CÔNG VĂN — chiều cao của nó tính theo 100vh nhưng CHƯA trừ phần
+      safe-area vừa thêm vào body. Không trừ lại thì đáy bảng bị body
+      (overflow:hidden, height:100dvh) cắt mất đúng bằng chiều cao tai thỏ,
+      và vì body không cuộn được nên phần đó mất luôn chứ không cuộn tới được. */
+.table-container {
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px)
+                            - env(safe-area-inset-bottom, 0px) - 310px);
+}
+@media (max-width: 768px) {
+    .table-container {
+        max-height: calc(100dvh - env(safe-area-inset-top, 0px)
+                                - env(safe-area-inset-bottom, 0px) - 240px);
+    }
+}
+
+/* 6. CẠNH DƯỚI — nút "+" nổi và toast đang đặt bottom 30px/20px, trong khi
+      thanh gạt home của iPhone chiếm ~34px. Nâng chúng lên khỏi vùng đó,
+      nếu không nút "+" rất khó bấm và toast bị thanh gạt che mất. */
+.floating-add-btn {
+    bottom: calc(30px + env(safe-area-inset-bottom, 0px));
+}
+.toast-container {
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+}
     </style>
 </head>
 <body>
