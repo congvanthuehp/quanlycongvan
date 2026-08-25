@@ -4,7 +4,7 @@
     // (service worker / CDN / chưa upload lên hosting). Không có nó thì rất
     // dễ mất thời gian sửa một lỗi đã sửa rồi mà chỉ là trình duyệt chưa nhận.
     // =====================================================================
-    const PHIEN_BAN_APP = '2026-08-25-b';
+    const PHIEN_BAN_APP = '2026-08-25-d';
     console.log('%c[Công Văn] app.js phiên bản: ' + PHIEN_BAN_APP,
                 'background:#0056b3;color:#fff;padding:2px 6px;border-radius:3px');
 
@@ -201,7 +201,8 @@
 
             document.getElementById('loginScreen').style.display = "none";
             document.getElementById('mainApp').style.display = "block";
-            document.getElementById('userInfo').innerText = "Xin chào: " + username;
+            // innerText (không phải innerHTML) - username là dữ liệu người dùng
+            document.getElementById('userInfo').innerText = "Xin chào, " + username + " 👋";
 
             // Xử lý Phân quyền hiển thị giao diện
             if(role === 'admin') {
@@ -354,20 +355,91 @@
     /* ========================================= */
     /* HÀM JS: ẨN/HIỆN BỘ LỌC THÔNG MINH (CLICK) */
     /* ========================================= */
+    // Dùng class .dang-an thay vì gán style.display trực tiếp: inline style luôn
+    // thắng CSS thường, nên nếu gán thẳng thì media query không thể quyết định
+    // trạng thái mặc định (thu gọn trên điện thoại / mở sẵn trên máy tính) nữa.
     function toggleBoLoc() {
         let khuVuc = document.getElementById("khuVucBoLoc");
+        if (!khuVuc) return;
+        khuVuc.classList.toggle("dang-an");
+        capNhatNhanNutBoLoc();
+    }
+
+    // Đếm số điều kiện lọc đang có giá trị, để hiện huy hiệu trên banner.
+    // Cần thiết vì khi bảng lọc bị thu gọn, người dùng rất dễ tưởng mất dữ liệu
+    // mà không biết bảng đang bị lọc.
+    function demBoLocDangDung() {
+        let soDieuKien = 0;
+
+        let fNgay = document.getElementById("filterNgay");
+        if (fNgay && fNgay.value && fNgay.value !== "Tất cả") soDieuKien++;
+
+        ["tuNgay", "denNgay", "filterTuan", "filterTo", "searchInput"].forEach(id => {
+            let el = document.getElementById(id);
+            if (el && el.value && el.value.trim() !== "") soDieuKien++;
+        });
+
+        return soDieuKien;
+    }
+
+    function capNhatNhanNutBoLoc() {
+        let khuVuc = document.getElementById("khuVucBoLoc");
         let btn = document.getElementById("btnToggleFilter");
-        
-        if (khuVuc.style.display === "none") {
-            khuVuc.style.display = "flex"; // Khôi phục lại flex layout ban đầu của lớp css advanced-filters
-            btn.innerHTML = "🔼 Ẩn Bộ Lọc Thông Minh";
-            btn.style.background = "#007bff";
-        } else {
-            khuVuc.style.display = "none";
-            btn.innerHTML = "🔽 Hiện Bộ Lọc Thông Minh";
-            btn.style.background = "#28a745";
+        if (!khuVuc || !btn) return;
+
+        let dangMo = !khuVuc.classList.contains("dang-an");
+        btn.classList.toggle("dang-mo", dangMo);
+        btn.setAttribute("aria-expanded", dangMo ? "true" : "false");
+
+        let phuDe = btn.querySelector(".fb-sub");
+        let huyHieu = document.getElementById("soBoLocDangDung");
+        let soDieuKien = demBoLocDangDung();
+
+        if (huyHieu) {
+            if (soDieuKien > 0) {
+                huyHieu.textContent = soDieuKien;
+                huyHieu.hidden = false;
+            } else {
+                huyHieu.hidden = true;
+            }
+        }
+
+        if (phuDe) {
+            phuDe.textContent = soDieuKien > 0
+                ? "Đang lọc " + soDieuKien + " điều kiện - chạm để " + (dangMo ? "thu gọn" : "xem/sửa")
+                : "Tìm kiếm nhanh chóng và chính xác";
         }
     }
+
+    // Xóa sạch các điều kiện trong bảng lọc. Chỉ đặt lại những ô NẰM TRONG bảng
+    // lọc - không đụng tới bộ lọc theo thẻ trạng thái (Chưa xử lý / Quá hạn...)
+    // vì đó là cụm điều khiển riêng nằm phía trên, người dùng không coi nó là
+    // một phần của "Bộ Lọc Thông Minh".
+    function datLaiBoLoc() {
+        let fNgay = document.getElementById("filterNgay");
+        if (fNgay) fNgay.value = "Tất cả";
+
+        ["tuNgay", "denNgay", "filterTuan", "filterTo", "searchInput"].forEach(id => {
+            let el = document.getElementById(id);
+            if (el) el.value = "";
+        });
+
+        hienThiBang(); // hàm này tự gọi capNhatNhanNutBoLoc() ở cuối
+        showToast("Đã đặt lại bộ lọc.", "info");
+    }
+
+    // Trạng thái mặc định: LUÔN THU GỌN mỗi lần mở app, trên MỌI kích thước màn
+    // hình (không chỉ điện thoại). Trạng thái này cố tình KHÔNG được ghi nhớ giữa
+    // các lần mở: mở app lên là bộ lọc đóng, muốn lọc thì chạm vào banner.
+    // Trong phiên làm việc thì vẫn tôn trọng lựa chọn của người dùng - đã mở ra
+    // thì cứ để mở, không tự đóng lại khi xoay ngang máy hay đổi cỡ cửa sổ.
+    function khoiTaoTrangThaiBoLoc() {
+        let khuVuc = document.getElementById("khuVucBoLoc");
+        if (!khuVuc) return;
+        khuVuc.classList.add("dang-an");
+        capNhatNhanNutBoLoc();
+    }
+    document.addEventListener("DOMContentLoaded", khoiTaoTrangThaiBoLoc);
 
     /* ========================================================= */
     /* HOÀN THIỆN HÀM IMPORT EXCEL VÀ CÁC HÀM PHÍA DƯỚI CỦA BẠN */
@@ -640,6 +712,10 @@
 
         htmlBang += `<tr><td colspan="15" style="height: 300px; border:none; background:transparent; pointer-events:none;"></td></tr>`;
         tbody.innerHTML = htmlBang;
+
+        // Đồng bộ huy hiệu "đang lọc N điều kiện" trên banner bộ lọc. Đặt ở đây vì
+        // mọi ô lọc đều gọi hienThiBang() khi thay đổi, nên chỉ cần móc một chỗ.
+        if (typeof capNhatNhanNutBoLoc === 'function') capNhatNhanNutBoLoc();
     }
 
     let clickCount = 0;

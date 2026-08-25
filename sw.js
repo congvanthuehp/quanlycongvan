@@ -6,7 +6,7 @@
 // =====================================================================
 // Tăng số này MỖI LẦN sửa index.html / app.js. Handler 'activate' dùng nó để
 // xóa sạch cache của phiên bản cũ, tránh trình duyệt phục vụ lại bản cũ.
-const CACHE_NAME = 'quanlycongvan-cache-v4';
+const CACHE_NAME = 'quanlycongvan-cache-v6';
 const APP_SHELL = [
   './index.html',
   './app.js',

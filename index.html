@@ -1203,6 +1203,172 @@ label { color: var(--ink); }
 .confirm-actions button:hover { filter: brightness(1.08); }
 
 /* ==========================================================================
+   HEADER MỚI — thẻ chào mừng + hàng nút hành động
+   Thay cho thanh xám #eee cũ: lời chào 2 dòng bên trái, cụm nút icon bên phải,
+   hàng dưới là 2 nút chính. Toàn bộ style cũ nằm inline trong HTML đã được gỡ
+   để CSS ở đây kiểm soát được bố cục (inline style luôn thắng CSS thường).
+   ========================================================================== */
+.header-top {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 14px 16px !important;
+    margin-bottom: 12px;
+}
+
+.header-row-main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.greeting { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+
+/* Selector 2 cấp (#userInfo.greeting-title) để thắng rule
+   "#userInfo { color: var(--brand) !important }" khai báo phía trên. */
+#userInfo.greeting-title {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--ink) !important;
+    text-transform: none !important;
+}
+.greeting-sub {
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: var(--ink-faint);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.header-row-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.btn-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter .15s ease, transform .1s ease;
+}
+.btn-pill:active { transform: scale(0.98); }
+.btn-pill-primary {
+    background: var(--brand) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: var(--shadow);
+}
+.btn-pill-primary:hover { filter: brightness(1.08); }
+.btn-pill-ghost {
+    background: var(--surface) !important;
+    color: var(--ink-soft) !important;
+    border: 1px solid var(--line) !important;
+}
+.btn-pill-ghost:hover { background: var(--surface-alt) !important; }
+
+@media (max-width: 768px) {
+    /* Trên điện thoại 2 nút chính chia đôi chiều ngang cho dễ bấm */
+    .header-row-buttons .btn-pill { flex: 1; }
+    #userInfo.greeting-title { font-size: 16.5px; }
+    .greeting-sub { font-size: 11.5px; }
+
+    /* Vô hiệu hóa 2 rule cũ ".header-top > div" (khai báo phía trên) vốn ép mọi
+       hàng con phải justify-content: flex-end - sẽ đẩy lời chào sang phải và làm
+       vỡ bố cục mới. Selector 2 class ở đây (0,2,0) thắng ".header-top > div" (0,1,1). */
+    .header-top > .header-row-main { justify-content: space-between; }
+    .header-top > .header-row-buttons { justify-content: flex-start; }
+}
+
+/* Nút đặt lại bộ lọc */
+.btn-reset-filter {
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line);
+    background: var(--surface-alt);
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.btn-reset-filter:hover { background: var(--surface); border-color: var(--brand); color: var(--brand); }
+
+/* ==========================================================================
+   BỘ LỌC THÔNG MINH — nút dạng banner, mặc định THU GỌN trên điện thoại
+   Dùng class .dang-an thay vì gán style.display trực tiếp, để media query
+   còn kiểm soát được trạng thái mặc định (inline style luôn thắng CSS).
+   ========================================================================== */
+#btnToggleFilter.filter-banner {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    padding: 12px 14px !important;
+    margin-bottom: 12px;
+    border: none !important;
+    border-radius: var(--radius-md) !important;
+    background: linear-gradient(135deg, #1f6fd0, #0b4ea2) !important;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+}
+#btnToggleFilter.filter-banner:hover { filter: brightness(1.06); }
+#btnToggleFilter.filter-banner:active { transform: scale(0.995); }
+
+.fb-icon {
+    width: 34px; height: 34px; flex-shrink: 0;
+    display: grid; place-items: center;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 9px;
+    font-size: 16px;
+}
+.fb-text { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.fb-title { font-weight: 700; font-size: 14.5px; }
+.fb-sub {
+    font-size: 11.5px; opacity: 0.85;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Huy hiệu "đang lọc N điều kiện" */
+.fb-count {
+    flex-shrink: 0;
+    background: #fff;
+    color: #0b4ea2;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 999px;
+}
+.fb-count[hidden] { display: none; }
+
+.fb-chevron {
+    flex-shrink: 0;
+    font-size: 24px;
+    line-height: 1;
+    transition: transform .25s ease;
+}
+/* Mũi tên quay xuống khi bảng lọc đang mở */
+#btnToggleFilter.dang-mo .fb-chevron { transform: rotate(90deg); }
+
+/* Trạng thái thu gọn của bảng lọc */
+.advanced-filters.dang-an { display: none !important; }
+
+/* ==========================================================================
    VÙNG AN TOÀN (SAFE AREA) — iPhone tai thỏ / Dynamic Island
    --------------------------------------------------------------------------
    Trang bật viewport-fit=cover (thẻ meta dòng 5) nên nội dung tràn sát mép
@@ -1415,38 +1581,40 @@ body {
 
     <!-- 4. GIAO DIỆN CHÍNH QUẢN LÝ CÔNG VĂN -->
     <div class="container" id="mainApp">
-        <div class="header-top" style="padding: 10px 15px; background: #eee; border-bottom: 2px solid #ccc; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                <span id="userInfo" style="font-weight: bold; color: #0056b3; text-transform: uppercase;">Xin chào: </span>
+        <div class="header-top">
+            <!-- Hàng 1: lời chào bên trái, cụm nút icon bên phải -->
+            <div class="header-row-main">
+                <div class="greeting">
+                    <span id="userInfo" class="greeting-title">Xin chào 👋</span>
+                    <span class="greeting-sub">Chúc bạn một ngày làm việc hiệu quả!</span>
+                </div>
+
+                <div class="header-actions">
+                    <span id="textCoThongBaoMoi" class="new-notif-text">📣 Có thông báo mới!</span>
+
+                    <!-- Nhóm 1: thao tác với dữ liệu công văn -->
+                    <button class="btn-icon-header" id="btnAdd" onclick="moFormThemMoi()" title="Thêm công văn mới">➕</button>
+                    <button class="btn-icon-header" id="btnExcel" onclick="document.getElementById('excelInput').click()" title="Nhập từ Excel">📥</button>
+                    <button class="btn-icon-header" id="btnExport" onclick="exportExcel()" title="Xuất ra Excel">📤</button>
+                    <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="importExcel(this)">
+
+                    <span class="header-divider"></span>
+
+                    <!-- Nhóm 2: thông báo & giao diện -->
+                    <button class="btn-bell" onclick="moLichSuThongBao()">
+                        <span id="iconChuong">🔔</span> <span id="badgeThongBao" class="badge-notif">0</span>
+                    </button>
+                    <button class="btn-theme-toggle" id="btnThemeToggle" onclick="toggleDarkMode()" title="Chuyển giao diện sáng/tối">🌙</button>
+
+                    <!-- Nhóm 3: phát thông báo (chỉ admin) -->
+                    <button id="btnGuiThongBaoAdmin" onclick="moFormThongBao()" class="btn-icon-header btn-icon-header-solid" style="display: none;" title="Phát thông báo">📢</button>
+                </div>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span id="textCoThongBaoMoi" class="new-notif-text">📣 Có thông báo mới!</span>
-
-                <!-- Nhóm 1: thao tác với dữ liệu công văn -->
-                <button class="btn-icon-header" id="btnAdd" onclick="moFormThemMoi()" title="Thêm công văn mới">➕</button>
-                <button class="btn-icon-header" id="btnExcel" onclick="document.getElementById('excelInput').click()" title="Nhập từ Excel">📥</button>
-                <button class="btn-icon-header" id="btnExport" onclick="exportExcel()" title="Xuất ra Excel">📤</button>
-                <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="importExcel(this)">
-
-                <span class="header-divider"></span>
-
-                <!-- Nhóm 2: thông báo & giao diện -->
-                <button class="btn-bell" onclick="moLichSuThongBao()">
-                    <span id="iconChuong">🔔</span> <span id="badgeThongBao" class="badge-notif">0</span>
-                </button>
-                <button class="btn-theme-toggle" id="btnThemeToggle" onclick="toggleDarkMode()" title="Chuyển giao diện sáng/tối">🌙</button>
-
-                <span class="header-divider"></span>
-
-                <!-- ĐÃ CHUYỂN NÚT PHÁT THÔNG BÁO VÀ XEM LỊCH HỌP XUỐNG ĐÂY, CÙNG HÀNG VỚI ĐĂNG XUẤT -->
-                <button id="btnGuiThongBaoAdmin" onclick="moFormThongBao()" class="btn-icon-header btn-icon-header-solid" style="display: none;" title="Phát thông báo">📢</button>
-                <button id="btnChuyenLich" onclick="toggleChucNang('LICH')" style="background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">📅 Xem Lịch Họp</button>
-
-                <span class="header-divider"></span>
-
-                <!-- Nhóm 3: đăng xuất -->
-                <button class="btn-logout" onclick="dangXuat()">Đăng xuất</button>
+            <!-- Hàng 2: hai nút hành động chính -->
+            <div class="header-row-buttons">
+                <button id="btnChuyenLich" class="btn-pill btn-pill-primary" onclick="toggleChucNang('LICH')">📅 Xem Lịch Họp</button>
+                <button class="btn-logout btn-pill btn-pill-ghost" onclick="dangXuat()">⏻ Đăng xuất</button>
             </div>
         </div>
 
@@ -1483,11 +1651,23 @@ body {
             </div>
         </div>
         
-        <button id="btnToggleFilter" onclick="toggleBoLoc()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #007bff; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">
-            🔼 Ẩn Bộ Lọc Thông Minh
+        <button id="btnToggleFilter" class="filter-banner" onclick="toggleBoLoc()"
+                aria-expanded="false" aria-controls="khuVucBoLoc">
+            <span class="fb-icon">🔍</span>
+            <span class="fb-text">
+                <span class="fb-title">Bộ Lọc Thông Minh</span>
+                <span class="fb-sub">Tìm kiếm nhanh chóng và chính xác</span>
+            </span>
+            <!-- Số điều kiện đang lọc: cần thiết vì khi bảng lọc bị thu gọn, người
+                 dùng rất dễ tưởng mất dữ liệu mà không biết bảng đang bị lọc. -->
+            <span class="fb-count" id="soBoLocDangDung" hidden></span>
+            <span class="fb-chevron" aria-hidden="true">›</span>
         </button>
 
-        <div class="advanced-filters" id="khuVucBoLoc">
+        <!-- Đặt sẵn class "dang-an" ngay trong HTML (không chờ JS thêm lúc
+             DOMContentLoaded) để bảng lọc không bị NHÁY HIỆN RA rồi mới đóng lại
+             khi tải trang. JS vẫn add lại class này nhưng chỉ là để chắc chắn. -->
+        <div class="advanced-filters dang-an" id="khuVucBoLoc">
             <span style="font-weight: bold; color: #555;">🔍 Lọc Thông Minh:</span>
             <select id="filterNgay" class="filter-select" onchange="hienThiBang()">
                 <option value="Tất cả">📅 Thời gian: Tất cả</option>
@@ -1504,6 +1684,7 @@ body {
             <input type="text" id="filterTuan" class="filter-select" placeholder="📆 Tuần BC (VD: Tuần 1)" oninput="hienThiBang()" style="width: 150px;">
             <input type="text" id="filterTo" class="filter-select" placeholder="👥 Tổ/Bộ phận" oninput="hienThiBang()" style="width: 170px;">
             <input type="text" id="searchInput" class="filter-select" placeholder="🔎 Tìm số, trích yếu..." oninput="hienThiBang()" style="flex: 1; min-width: 150px;">
+            <button type="button" class="btn-reset-filter" onclick="datLaiBoLoc()">↺ Đặt lại</button>
         </div>
 
         <div class="table-container">
